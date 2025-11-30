@@ -4,6 +4,20 @@ A comprehensive framework for designing a generic simulation engine.
 
 ---
 
+## Release v0.1 Goals (and non-goals)
+- Generic, reusable event-driven simulation engine
+- Supports two time modes:
+  * DISCRETE (turn-based)
+  * CONTINUOUS (timed events, e.g., seconds)
+- Clean, minimal API for:
+  * Defining worlds, entities, and systems
+  * Scheduling and processing events
+  * Running simulations and collecting results
+- No GUI/Visualization framework yet (simple logging is fine)
+- No distributed / multi-node execution
+- No plugin discovery system (just manual registration)
+- No scenario editor UI(config + copde is good enough for now)
+
 ## 1. Overall Intent & Usage Patterns
 
 ### What You Want

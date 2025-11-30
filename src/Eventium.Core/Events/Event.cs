@@ -51,7 +51,8 @@ public sealed class Event : IComparable<Event>
 
     public static bool operator ==(Event? left, Event? right)
     {
-        if (left is null) return right is null;
+        if (left is null)
+            return right is null;
         return left.Equals(right);
     }
 
@@ -62,34 +63,40 @@ public sealed class Event : IComparable<Event>
 
     public static bool operator <(Event? left, Event? right)
     {
-        if (left is null) return right is not null;
+        if (left is null)
+            return right is not null;
         return left.CompareTo(right) < 0;
     }
 
     public static bool operator <=(Event? left, Event? right)
     {
-        if (left is null) return true;
+        if (left is null)
+            return true;
         return left.CompareTo(right) <= 0;
     }
 
     public static bool operator >(Event? left, Event? right)
     {
-        if (left is null) return false;
+        if (left is null)
+            return false;
         return left.CompareTo(right) > 0;
     }
 
     public static bool operator >=(Event? left, Event? right)
     {
-        if (left is null) return right is null;
+        if (left is null)
+            return right is null;
         return left.CompareTo(right) >= 0;
     }
 
     public int CompareTo(Event? other)
     {
-        if (other is null) return 1;
+        if (other is null)
+            return 1;
 
         var timeCmp = Time.CompareTo(other.Time);
-        if (timeCmp != 0) return timeCmp;
+        if (timeCmp != 0)
+            return timeCmp;
 
         return Priority.CompareTo(other.Priority);
     }

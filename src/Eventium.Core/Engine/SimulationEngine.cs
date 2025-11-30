@@ -80,7 +80,8 @@ public sealed class SimulationEngine : ISimulationEngine
         while (_running && Queue.Count > 0)
         {
             var evt = Queue.Dequeue();
-            if (evt is null) break;
+            if (evt is null)
+                break;
 
             if (untilTime.HasValue && evt.Time > untilTime.Value)
             {

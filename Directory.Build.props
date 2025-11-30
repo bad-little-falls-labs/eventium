@@ -1,0 +1,30 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- Suppress naming warnings for intentional domain-specific names -->
+    <NoWarn>$(NoWarn);CA1711;CA1716</NoWarn>
+  </PropertyGroup>
+
+  <!-- Package metadata for NuGet -->
+  <PropertyGroup>
+    <Authors>Bad Little Falls Labs</Authors>
+    <Company>Bad Little Falls Labs</Company>
+    <Copyright>Copyright © 2025 Bad Little Falls Labs</Copyright>
+    <RepositoryUrl>https://github.com/bad-little-falls-labs/eventium</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <!-- Deterministic builds for reproducibility -->
+  <PropertyGroup Condition="'$(CI)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+</Project>

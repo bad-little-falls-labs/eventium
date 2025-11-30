@@ -17,7 +17,8 @@ public static class EventLogger
 
     private static string FormatPayload(Event evt)
     {
-        if (evt.Payload.Count == 0) return "{}";
+        if (evt.Payload.Count == 0)
+            return "{}";
 
         var parts = new List<string>();
         foreach (var kvp in evt.Payload)

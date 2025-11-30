@@ -152,10 +152,11 @@ Speed up builds with dependency caching:
 ```
 
 **Coverage Targets:**
-| Component | Minimum | Target |
-|-----------|---------|--------|
-| Eventium.Core | 70% | 85% |
-| Overall | 60% | 80% |
+
+| Component     | Minimum | Target |
+| ------------- | ------- | ------ |
+| Eventium.Core | 70%     | 85%    |
+| Overall       | 60%     | 80%    |
 
 ### 3.2 Static Analysis
 
@@ -270,7 +271,7 @@ Automatically create releases with changelogs:
 
 **Commit Format:**
 
-```
+```text
 type(scope): description
 
 feat: new feature
@@ -364,7 +365,7 @@ ENTRYPOINT ["dotnet", "Eventium.dll"]
 
 ## Repository Structure (Target)
 
-```
+```text
 eventium/
 ├── .editorconfig
 ├── .gitignore

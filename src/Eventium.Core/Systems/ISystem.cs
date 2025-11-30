@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Eventium.Core.Events;
 
 namespace Eventium.Core.Systems;
@@ -16,5 +15,7 @@ public interface ISystem
     /// <summary>
     /// Handles a dispatched event.
     /// </summary>
-    void HandleEvent(SimulationEngine engine, Event evt);
+    /// <param name="context">The simulation context.</param>
+    /// <param name="evt">The event to handle.</param>
+    void HandleEvent(ISimulationContext context, Event evt);
 }

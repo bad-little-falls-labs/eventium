@@ -5,20 +5,20 @@ namespace Eventium.Core.Events;
 /// <summary>
 /// Priority queue of simulation events, ordered by time then priority.
 /// </summary>
-public sealed class EventQueue
+public sealed class EventQueue : IEventQueue
 {
     private readonly PriorityQueue<Event, (double time, int priority)> _queue = new();
 
     public int Count => _queue.Count;
 
-    public void Enqueue(Event evt)
-    {
-        _queue.Enqueue(evt, (evt.Time, evt.Priority));
-    }
-
     public Event? Dequeue()
     {
         return _queue.TryDequeue(out var evt, out _) ? evt : null;
+    }
+
+    public void Enqueue(Event evt)
+    {
+        _queue.Enqueue(evt, (evt.Time, evt.Priority));
     }
 
     public double? PeekTime()

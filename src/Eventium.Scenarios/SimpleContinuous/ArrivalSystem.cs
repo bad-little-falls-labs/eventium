@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Eventium.Core;
 using Eventium.Core.Events;
 using Eventium.Core.Systems;
@@ -9,30 +8,33 @@ namespace Eventium.Scenarios.SimpleContinuous;
 
 public sealed class ArrivalSystem : ISystem
 {
-    public IEnumerable<string> HandledEventTypes => new[] { "CUSTOMER_ARRIVAL" };
+    public IEnumerable<string> HandledEventTypes => [ContinuousEventTypes.CustomerArrival];
 
-    public void HandleEvent(SimulationEngine engine, Event evt)
+    public void HandleEvent(ISimulationContext context, Event evt)
     {
-        var id = engine.World.Entities.Count + 1;
+        // Validate payload type (optional, for type safety)
+        _ = evt.GetPayload<CustomerArrivalPayload>();
 
-        var entity = new Entity(id, "CUSTOMER");
-        entity.AddComponent("arrival", new ArrivalComponent
+        var id = context.World.Entities.Count + 1;
+
+        var entity = new Entity(id, ContinuousEntityTypes.Customer);
+        entity.AddComponent(ContinuousComponentNames.Arrival, new ArrivalComponent
         {
-            ArrivedAt = engine.Time
+            ArrivedAt = context.Time
         });
 
-        engine.World.AddEntity(entity);
+        context.World.AddEntity(entity);
 
-        Console.WriteLine($"t={engine.Time:0.0}s: Customer {id} arrived");
+        Console.WriteLine($"t={context.Time:0.0}s: Customer {id} arrived");
 
         // schedule next arrival ~10s later (exponential)
         var mean = 10.0;
-        var u = engine.Rng.NextDouble();
+        var u = context.Rng.NextDouble();
         var dt = -mean * Math.Log(1.0 - u);
 
-        engine.ScheduleIn(
+        context.ScheduleIn(
             dt: dt,
-            type: "CUSTOMER_ARRIVAL",
-            payload: new Dictionary<string, object?>());
+            type: ContinuousEventTypes.CustomerArrival,
+            payload: CustomerArrivalPayload.Instance);
     }
 }

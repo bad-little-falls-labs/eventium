@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace Eventium.Core.Events;
 
 /// <summary>
@@ -38,5 +35,54 @@ public sealed class Event : IComparable<Event>
         if (timeCmp != 0) return timeCmp;
 
         return Priority.CompareTo(other.Priority);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is Event other)
+        {
+            return Math.Abs(Time - other.Time) < double.Epsilon && Priority == other.Priority && Type == other.Type;
+        }
+        return false;
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Time, Priority, Type);
+    }
+
+    public static bool operator ==(Event? left, Event? right)
+    {
+        if (left is null) return right is null;
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(Event? left, Event? right)
+    {
+        return !(left == right);
+    }
+
+    public static bool operator <(Event? left, Event? right)
+    {
+        if (left is null) return right is not null;
+        return left.CompareTo(right) < 0;
+    }
+
+    public static bool operator <=(Event? left, Event? right)
+    {
+        if (left is null) return true;
+        return left.CompareTo(right) <= 0;
+    }
+
+    public static bool operator >(Event? left, Event? right)
+    {
+        if (left is null) return false;
+        return left.CompareTo(right) > 0;
+    }
+
+    public static bool operator >=(Event? left, Event? right)
+    {
+        if (left is null) return right is null;
+        return left.CompareTo(right) >= 0;
     }
 }

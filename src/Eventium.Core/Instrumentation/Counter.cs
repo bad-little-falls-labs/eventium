@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Eventium.Core.Instrumentation;
 
 /// <summary>
@@ -13,6 +15,7 @@ public sealed class Counter
         Name = name;
     }
 
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Modifies instance state (Value)")]
     public void Increment(long amount = 1)
     {
         Value += amount;

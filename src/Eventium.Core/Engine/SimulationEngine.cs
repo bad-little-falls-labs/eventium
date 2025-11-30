@@ -1,17 +1,16 @@
-using System;
-using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Eventium.Core.Events;
 using Eventium.Core.Instrumentation;
 using Eventium.Core.Random;
 using Eventium.Core.Systems;
 using Eventium.Core.Time;
-using Eventium.Core.World;
 
 namespace Eventium.Core;
 
 /// <summary>
 /// Central orchestrator of a simulation run.
 /// </summary>
+[SuppressMessage("Design", "S1450:Private fields only used as local variables in methods should become local variables", Justification = "_running is set by Stop() to halt Run() loop")]
 public sealed class SimulationEngine
 {
     private readonly Dictionary<string, List<EventHandlerDelegate>> _handlers = new();

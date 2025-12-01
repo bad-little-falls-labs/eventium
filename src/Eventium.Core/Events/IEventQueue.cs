@@ -1,3 +1,6 @@
+// <copyright file="IEventQueue.cs" company="bad-little-falls-labs">
+// Copyright © 2025 bad-little-falls-labs. All rights reserved.
+// </copyright>
 namespace Eventium.Core.Events;
 
 /// <summary>

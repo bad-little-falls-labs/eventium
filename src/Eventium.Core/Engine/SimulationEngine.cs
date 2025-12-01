@@ -1,3 +1,6 @@
+// <copyright file="SimulationEngine.cs" company="bad-little-falls-labs">
+// Copyright © 2025 bad-little-falls-labs. All rights reserved.
+// </copyright>
 using System.Diagnostics.CodeAnalysis;
 using Eventium.Core.Events;
 using Eventium.Core.Instrumentation;

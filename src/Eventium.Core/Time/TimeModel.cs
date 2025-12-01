@@ -1,3 +1,6 @@
+// <copyright file="TimeModel.cs" company="bad-little-falls-labs">
+// Copyright © 2025 bad-little-falls-labs. All rights reserved.
+// </copyright>
 using System;
 
 namespace Eventium.Core.Time;
@@ -7,8 +10,6 @@ namespace Eventium.Core.Time;
 /// </summary>
 public sealed class TimeModel
 {
-    public TimeMode Mode { get; }
-    public double Step { get; }
 
     public TimeModel(TimeMode mode, double step = 1.0)
     {
@@ -20,6 +21,8 @@ public sealed class TimeModel
     /// Initial simulation time.
     /// </summary>
     public static double InitialTime => 0.0;
+    public TimeMode Mode { get; }
+    public double Step { get; }
 
     /// <summary>
     /// Returns the next step time for discrete simulations.

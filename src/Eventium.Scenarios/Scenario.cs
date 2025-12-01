@@ -1,3 +1,6 @@
+// <copyright file="Scenario.cs" company="bad-little-falls-labs">
+// Copyright © 2025 bad-little-falls-labs. All rights reserved.
+// </copyright>
 using Eventium.Core;
 using Eventium.Core.Events;
 
@@ -10,10 +13,6 @@ public delegate void ScenarioInitializer(SimulationEngine engine);
 
 public sealed class Scenario
 {
-    public string Name { get; }
-    public string Description { get; }
-    public ScenarioInitializer? Initializer { get; }
-    public IReadOnlyCollection<Event> InitialEvents { get; }
 
     public Scenario(
         string name,
@@ -28,6 +27,10 @@ public sealed class Scenario
             ? Array.Empty<Event>()
             : new List<Event>(initialEvents);
     }
+    public string Description { get; }
+    public IReadOnlyCollection<Event> InitialEvents { get; }
+    public ScenarioInitializer? Initializer { get; }
+    public string Name { get; }
 
     public void Apply(SimulationEngine engine)
     {

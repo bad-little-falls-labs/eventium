@@ -1,3 +1,6 @@
+// <copyright file="ArrivalSystem.cs" company="bad-little-falls-labs">
+// Copyright © 2025 bad-little-falls-labs. All rights reserved.
+// </copyright>
 using System;
 using Eventium.Core;
 using Eventium.Core.Events;

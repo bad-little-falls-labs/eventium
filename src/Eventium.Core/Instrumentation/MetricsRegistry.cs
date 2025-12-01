@@ -1,3 +1,6 @@
+// <copyright file="MetricsRegistry.cs" company="bad-little-falls-labs">
+// Copyright © 2025 bad-little-falls-labs. All rights reserved.
+// </copyright>
 using System.Collections.Generic;
 
 namespace Eventium.Core.Instrumentation;

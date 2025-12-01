@@ -1,5 +1,8 @@
 using System.Collections.Generic;
 
+// <copyright file="World.cs" company="bad-little-falls-labs">
+// Copyright © 2025 bad-little-falls-labs. All rights reserved.
+// </copyright>
 namespace Eventium.Core.World;
 
 /// <summary>

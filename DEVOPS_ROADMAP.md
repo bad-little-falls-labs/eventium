@@ -22,12 +22,12 @@ Set up Git hooks to catch issues before code reaches the repository.
 
 **Tools:**
 
--   [Husky.Net](https://alirezanet.github.io/Husky.Net/) - Git hooks for .NET projects
--   Or shell-based hooks in `.git/hooks/`
+- Husky.Net - Git hooks for .NET projects
+- Or shell-based hooks in `.git/hooks/`
 
 **Pre-commit checks:**
 
-```bash
+```sh
 # .husky/pre-commit
 #!/bin/sh
 dotnet format --verify-no-changes
@@ -37,19 +37,19 @@ dotnet test --no-build --verbosity quiet
 
 **Checks to run:**
 
--   [ ] Code formatting verification (`dotnet format --verify-no-changes`)
--   [ ] Build succeeds (`dotnet build`)
--   [ ] All tests pass (`dotnet test`)
--   [ ] No compiler warnings (`dotnet build -warnaserror`)
+- [ ] Code formatting verification (`dotnet format --verify-no-changes`)
+- [ ] Build succeeds (`dotnet build`)
+- [ ] All tests pass (`dotnet test`)
+- [ ] No compiler warnings (`dotnet build -warnaserror`)
 
 ### 1.2 EditorConfig
 
 Create `.editorconfig` for consistent code style across IDEs:
 
--   Indentation (spaces vs tabs)
--   Line endings
--   Charset
--   C# specific rules (naming conventions, using directives)
+- Indentation (spaces vs tabs)
+- Line endings
+- Charset
+- C# specific rules (naming conventions, using directives)
 
 ### 1.3 Directory.Build.props
 
@@ -70,9 +70,9 @@ Centralize build configuration:
 
 Create helper scripts in `/scripts` or use a `Makefile`:
 
--   `build.sh` / `build.ps1`
--   `test.sh` / `test.ps1`
--   `format.sh` / `format.ps1`
+- `build.sh` / `build.ps1`
+- `test.sh` / `test.ps1`
+- `format.sh` / `format.ps1`
 
 ---
 
@@ -138,9 +138,9 @@ Speed up builds with dependency caching:
 
 **Tools:**
 
--   Coverlet (already included with xUnit template)
--   ReportGenerator for HTML reports
--   Codecov or Coveralls for tracking
+- Coverlet (already included with xUnit template)
+- ReportGenerator for HTML reports
+- Codecov or Coveralls for tracking
 
 **CI Step:**
 
@@ -162,9 +162,9 @@ Speed up builds with dependency caching:
 
 **Tools:**
 
--   .NET Analyzers (built-in)
--   StyleCop.Analyzers
--   SonarCloud (optional, free for open source)
+- .NET Analyzers (built-in)
+- StyleCop.Analyzers
+- SonarCloud (optional, free for open source)
 
 **Configuration:**
 
@@ -179,9 +179,9 @@ Speed up builds with dependency caching:
 
 **Tools:**
 
--   `dotnet list package --vulnerable` - Check for vulnerable dependencies
--   GitHub Dependabot - Automated dependency updates
--   CodeQL - Static application security testing (SAST)
+- `dotnet list package --vulnerable` - Check for vulnerable dependencies
+- GitHub Dependabot - Automated dependency updates
+- CodeQL - Static application security testing (SAST)
 
 **Dependabot Config:** `.github/dependabot.yml`
 
@@ -202,10 +202,10 @@ updates:
 
 Enforce quality on pull requests:
 
--   [ ] All CI checks must pass
--   [ ] Code coverage must not decrease
--   [ ] No new security vulnerabilities
--   [ ] At least one approval required
+- [ ] All CI checks must pass
+- [ ] Code coverage must not decrease
+- [ ] No new security vulnerabilities
+- [ ] At least one approval required
 
 ---
 
@@ -215,13 +215,13 @@ Enforce quality on pull requests:
 
 **Semantic Versioning:** `MAJOR.MINOR.PATCH`
 
--   MAJOR: Breaking changes
--   MINOR: New features (backward compatible)
--   PATCH: Bug fixes
+- MAJOR: Breaking changes
+- MINOR: New features (backward compatible)
+- PATCH: Bug fixes
 
 **Tools:**
 
--   MinVer or GitVersion for automatic versioning from Git tags
+- MinVer or GitVersion for automatic versioning from Git tags
 
 ### 4.2 NuGet Publishing
 
@@ -266,13 +266,13 @@ Automatically create releases with changelogs:
 
 **Tools:**
 
--   [Conventional Commits](https://www.conventionalcommits.org/) for commit messages
--   Auto-generate CHANGELOG.md from commits
+- Conventional Commits for commit messages
+- Auto-generate CHANGELOG.md from commits
 
 **Commit Format:**
 
 ```text
-type(scope): description
+type(scope): description # e.g., feat(auth): add password reset
 
 feat: new feature
 fix: bug fix
@@ -290,25 +290,25 @@ chore: maintenance
 
 Configure on GitHub:
 
--   Require status checks before merging
--   Require branches to be up to date
--   Require signed commits (optional)
--   Restrict who can push to main
+- Require status checks before merging
+- Require branches to be up to date
+- Require signed commits (optional)
+- Restrict who can push to main
 
 ### 5.2 Environment-based Deployments
 
 For future web/API scenarios:
 
--   Development → Staging → Production
--   Manual approval gates for production
--   Rollback capabilities
+- Development → Staging → Production
+- Manual approval gates for production
+- Rollback capabilities
 
 ### 5.3 Performance Benchmarks
 
 **Tools:**
 
--   BenchmarkDotNet for performance testing
--   Track performance regressions in CI
+- BenchmarkDotNet for performance testing
+- Track performance regressions in CI
 
 **File:** `benchmarks/Eventium.Benchmarks/`
 
@@ -316,8 +316,8 @@ For future web/API scenarios:
 
 **Tools:**
 
--   DocFX for API documentation
--   GitHub Pages for hosting
+- DocFX for API documentation
+- GitHub Pages for hosting
 
 ### 5.5 Container Support (Future)
 
@@ -336,30 +336,30 @@ ENTRYPOINT ["dotnet", "Eventium.dll"]
 
 ### Immediate (This Sprint)
 
--   [x] Create `.editorconfig`
--   [x] Create `Directory.Build.props`
--   [x] Set up basic GitHub Actions CI workflow
--   [x] Configure Dependabot
+- [x] Create `.editorconfig`
+- [x] Create `Directory.Build.props`
+- [x] Set up basic GitHub Actions CI workflow
+- [x] Configure Dependabot
 
 ### Short-term (Next 2 Weeks)
 
--   [x] Add pre-commit hooks with Husky.Net
--   [x] Configure code coverage reporting
--   [x] Add static analysis (StyleCop)
--   [x] Set up branch protection rules
+- [x] Add pre-commit hooks with Husky.Net
+- [x] Configure code coverage reporting
+- [x] Add static analysis (StyleCop)
+- [x] Set up branch protection rules
 
 ### Medium-term (Next Month)
 
--   [x] Implement release workflow
--   [x] Set up NuGet publishing
--   [x] Add security scanning (CodeQL)
--   [x] Create contribution guidelines (CONTRIBUTING.md)
+- [x] Implement release workflow
+- [x] Set up NuGet publishing
+- [x] Add security scanning (CodeQL)
+- [x] Create contribution guidelines (CONTRIBUTING.md)
 
 ### Long-term (Ongoing)
 
--   [ ] Performance benchmarking
--   [ ] API documentation generation
--   [ ] Expand to multi-platform testing
+- [ ] Performance benchmarking
+- [ ] API documentation generation
+- [ ] Expand to multi-platform testing
 
 ---
 
@@ -414,8 +414,8 @@ eventium/
 
 ## References
 
--   [GitHub Actions Documentation](https://docs.github.com/en/actions)
--   [.NET CI/CD Best Practices](https://docs.microsoft.com/en-us/dotnet/devops/)
--   [Conventional Commits](https://www.conventionalcommits.org/)
--   [Semantic Versioning](https://semver.org/)
--   [Husky.Net](https://alirezanet.github.io/Husky.Net/)
+- [GitHub Actions Documentation](https://docs.github.com/en/actions)
+- [.NET CI/CD Best Practices](https://docs.microsoft.com/en-us/dotnet/devops/)
+- [Conventional Commits](https://www.conventionalcommits.org/)
+- [Semantic Versioning](https://semver.org/)
+- [Husky.Net](https://alirezanet.github.io/Husky.Net/)

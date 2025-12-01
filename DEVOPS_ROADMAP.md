@@ -336,24 +336,24 @@ ENTRYPOINT ["dotnet", "Eventium.dll"]
 
 ### Immediate (This Sprint)
 
--   [ ] Create `.editorconfig`
--   [ ] Create `Directory.Build.props`
--   [ ] Set up basic GitHub Actions CI workflow
--   [ ] Configure Dependabot
+-   [x] Create `.editorconfig`
+-   [x] Create `Directory.Build.props`
+-   [x] Set up basic GitHub Actions CI workflow
+-   [x] Configure Dependabot
 
 ### Short-term (Next 2 Weeks)
 
--   [ ] Add pre-commit hooks with Husky.Net
--   [ ] Configure code coverage reporting
--   [ ] Add static analysis (StyleCop)
--   [ ] Set up branch protection rules
+-   [x] Add pre-commit hooks with Husky.Net
+-   [x] Configure code coverage reporting
+-   [x] Add static analysis (StyleCop)
+-   [x] Set up branch protection rules
 
 ### Medium-term (Next Month)
 
--   [ ] Implement release workflow
--   [ ] Set up NuGet publishing
--   [ ] Add security scanning (CodeQL)
--   [ ] Create contribution guidelines (CONTRIBUTING.md)
+-   [x] Implement release workflow
+-   [x] Set up NuGet publishing
+-   [x] Add security scanning (CodeQL)
+-   [x] Create contribution guidelines (CONTRIBUTING.md)
 
 ### Long-term (Ongoing)
 

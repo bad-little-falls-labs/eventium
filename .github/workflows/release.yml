@@ -45,7 +45,7 @@ jobs:
               run: dotnet pack src/Eventium.Core/Eventium.Core.csproj --no-build --configuration Release --output ./artifacts -p:PackageVersion=${{ steps.version.outputs.VERSION }}
 
             - name: Create GitHub Release
-              uses: softprops/action-gh-release@v1
+              uses: softprops/action-gh-release@v2
               with:
                   files: ./artifacts/*.nupkg
                   generate_release_notes: true

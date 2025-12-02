@@ -1,0 +1,97 @@
+name: Benchmarks
+
+on:
+    push:
+        branches: [main]
+        paths:
+            - "src/**"
+            - "benchmarks/**"
+            - ".github/workflows/benchmarks.yml"
+    pull_request:
+        branches: [main]
+        paths:
+            - "src/**"
+            - "benchmarks/**"
+    workflow_dispatch:
+
+jobs:
+    benchmark:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Setup .NET
+              uses: actions/setup-dotnet@v4
+              with:
+                  dotnet-version: "9.0.x"
+
+            - name: Restore dependencies
+              run: dotnet restore
+
+            - name: Build
+              run: dotnet build -c Release --no-restore
+
+            - name: Run benchmarks
+              run: |
+                  cd benchmarks/Eventium.Benchmarks
+                  dotnet run -c Release --no-build -- --job short --exporters json
+
+            - name: Upload benchmark results
+              uses: actions/upload-artifact@v4
+              with:
+                  name: benchmark-results
+                  path: benchmarks/Eventium.Benchmarks/BenchmarkDotNet.Artifacts/results/*.json
+
+            - name: Comment PR with results
+              if: github.event_name == 'pull_request'
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      const fs = require('fs');
+                      const path = require('path');
+
+                      const resultsDir = 'benchmarks/Eventium.Benchmarks/BenchmarkDotNet.Artifacts/results';
+
+                      if (!fs.existsSync(resultsDir)) {
+                        console.log('No results directory found');
+                        return;
+                      }
+
+                      let comment = '## 📊 Benchmark Results\n\n';
+                      comment += '_Benchmark results from this PR:_\n\n';
+                      comment += '```\n';
+
+                      try {
+                        const files = fs.readdirSync(resultsDir);
+                        const jsonFiles = files.filter(f => f.endsWith('.json') && !f.includes('full'));
+                        
+                        if (jsonFiles.length === 0) {
+                          comment += 'No benchmark results found.\n';
+                        } else {
+                          for (const file of jsonFiles) {
+                            const data = JSON.parse(fs.readFileSync(path.join(resultsDir, file), 'utf8'));
+                            comment += `\n=== ${data.Title || 'Results'} ===\n`;
+                            
+                            if (data.Benchmarks) {
+                              for (const bench of data.Benchmarks) {
+                                const mean = bench.Statistics?.Mean || 0;
+                                const unit = bench.Statistics?.Unit || 'ns';
+                                comment += `${bench.Method}: ${mean.toFixed(2)} ${unit}\n`;
+                              }
+                            }
+                          }
+                        }
+                      } catch (error) {
+                        comment += `Error reading results: ${error.message}\n`;
+                      }
+
+                      comment += '```\n\n';
+                      comment += '_Note: These are quick benchmarks. Full results available in artifacts._';
+
+                      github.rest.issues.createComment({
+                        issue_number: context.issue.number,
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        body: comment
+                      });

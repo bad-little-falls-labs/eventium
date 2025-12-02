@@ -305,12 +305,38 @@ For future web/API scenarios:
 
 ### 5.3 Performance Benchmarks
 
-**Tools:**
+**Status:** ✅ **Complete**
 
-- BenchmarkDotNet for performance testing
-- Track performance regressions in CI
+**Implementation:**
 
-**File:** `benchmarks/Eventium.Benchmarks/`
+- ✅ BenchmarkDotNet 0.14.0 integrated
+- ✅ EventQueue benchmarks (Enqueue, Dequeue, combined operations)
+- ✅ SimulationEngine benchmarks (various scenarios)
+- ✅ World benchmarks (entity/component operations)
+- ✅ Memory diagnostics enabled ([MemoryDiagnoser])
+- ✅ Parameterized tests (100, 1000, 10000 scale)
+- ✅ GitHub Actions workflow for automated benchmark runs
+- ✅ PR comments with benchmark results
+
+**Baseline Performance (Apple M1 Max):**
+
+| Component  | Scale  | Operation       | Mean Time | Allocation |
+| ---------- | ------ | --------------- | --------- | ---------- |
+| EventQueue | 100    | Enqueue         | 840 ns    | 6.09 KB    |
+| EventQueue | 100    | Enqueue+Dequeue | 2.96 µs   | 6.09 KB    |
+| EventQueue | 1,000  | Enqueue         | 8.61 µs   | 48.16 KB   |
+| EventQueue | 1,000  | Enqueue+Dequeue | 74.4 µs   | 48.16 KB   |
+| EventQueue | 10,000 | Enqueue         | 273 µs    | 768 KB     |
+| EventQueue | 10,000 | Enqueue+Dequeue | 1.41 ms   | 768 KB     |
+
+**Files:** `benchmarks/Eventium.Benchmarks/`, `.github/workflows/benchmarks.yml`
+
+**Usage:**
+
+```bash
+cd benchmarks/Eventium.Benchmarks
+dotnet run -c Release
+```
 
 ### 5.4 Documentation Generation
 

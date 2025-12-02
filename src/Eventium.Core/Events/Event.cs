@@ -87,6 +87,12 @@ public sealed class Event : IComparable<Event>
     /// </summary>
     public IEventPayload? TypedPayload { get; }
 
+    /// <summary>
+    /// Determines whether two events are equal.
+    /// </summary>
+    /// <param name="left">The left event to compare.</param>
+    /// <param name="right">The right event to compare.</param>
+    /// <returns>True if equal; otherwise false.</returns>
     public static bool operator ==(Event? left, Event? right)
     {
         if (left is null)
@@ -94,11 +100,23 @@ public sealed class Event : IComparable<Event>
         return left.Equals(right);
     }
 
+    /// <summary>
+    /// Determines whether two events are not equal.
+    /// </summary>
+    /// <param name="left">The left event to compare.</param>
+    /// <param name="right">The right event to compare.</param>
+    /// <returns>True if not equal; otherwise false.</returns>
     public static bool operator !=(Event? left, Event? right)
     {
         return !(left == right);
     }
 
+    /// <summary>
+    /// Determines whether the left event is ordered before the right event.
+    /// </summary>
+    /// <param name="left">The left event.</param>
+    /// <param name="right">The right event.</param>
+    /// <returns>True if left precedes right; otherwise false.</returns>
     public static bool operator <(Event? left, Event? right)
     {
         if (left is null)
@@ -106,6 +124,12 @@ public sealed class Event : IComparable<Event>
         return left.CompareTo(right) < 0;
     }
 
+    /// <summary>
+    /// Determines whether the left event is ordered before or equal to the right event.
+    /// </summary>
+    /// <param name="left">The left event.</param>
+    /// <param name="right">The right event.</param>
+    /// <returns>True if left precedes or equals right; otherwise false.</returns>
     public static bool operator <=(Event? left, Event? right)
     {
         if (left is null)
@@ -113,6 +137,12 @@ public sealed class Event : IComparable<Event>
         return left.CompareTo(right) <= 0;
     }
 
+    /// <summary>
+    /// Determines whether the left event is ordered after the right event.
+    /// </summary>
+    /// <param name="left">The left event.</param>
+    /// <param name="right">The right event.</param>
+    /// <returns>True if left follows right; otherwise false.</returns>
     public static bool operator >(Event? left, Event? right)
     {
         if (left is null)
@@ -120,6 +150,12 @@ public sealed class Event : IComparable<Event>
         return left.CompareTo(right) > 0;
     }
 
+    /// <summary>
+    /// Determines whether the left event is ordered after or equal to the right event.
+    /// </summary>
+    /// <param name="left">The left event.</param>
+    /// <param name="right">The right event.</param>
+    /// <returns>True if left follows or equals right; otherwise false.</returns>
     public static bool operator >=(Event? left, Event? right)
     {
         if (left is null)

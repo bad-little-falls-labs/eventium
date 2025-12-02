@@ -1,0 +1,9 @@
+# Code owners for Eventium
+
+# Pattern format: see <https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners>
+
+- @bad-little-falls-labs
+
+/src/Eventium.Core/ @bad-little-falls-labs
+/tests/ @bad-little-falls-labs
+/docs/ @bad-little-falls-labs

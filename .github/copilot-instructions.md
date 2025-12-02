@@ -2,7 +2,8 @@
 
 ## Project Overview
 
-Eventium is a modern, extensible event-driven simulation engine for modeling real-world systems, processes, and scenarios. It supports both turn-based (discrete) and continuous-time (timed) simulations through a unified scheduling and event-processing architecture.
+Eventium is a modern, extensible event-driven simulation engine for modeling real-world systems, processes, and scenarios.
+It supports both turn-based (discrete) and continuous-time (timed) simulations through a unified scheduling and event-processing architecture.
 
 ## Technology Stack
 
@@ -32,12 +33,12 @@ dotnet run --project src/Eventium.Scenarios
 
 ## Code Style Guidelines
 
-- Use **file-scoped namespaces** (e.g., `namespace Eventium.Core;`)
+- Use **file-scoped namespaces** (e.g., `namespace Eventium.Core.Engine;`)
 - Use **4 spaces** for indentation in C# files
 - Include **XML documentation comments** on all public types and members
 - Add **copyright headers** at the top of each C# file:
   ```csharp
-  // <copyright file="FileName.cs" company="bad-little-falls-labs">
+  // <copyright file="SimulationEngine.cs" company="bad-little-falls-labs">
   // Copyright © 2025 bad-little-falls-labs. All rights reserved.
   // </copyright>
   ```

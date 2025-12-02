@@ -2,7 +2,11 @@
   "metadata": [
     {
       "src": [
-        { "files": ["src/Eventium.Core/**.csproj"], "exclude": ["**/bin/**", "**/obj/**"] }
+        { 
+          "src": "..",
+          "files": ["src/Eventium.Core/**.csproj"], 
+          "exclude": ["**/bin/**", "**/obj/**"]
+        }
       ],
       "dest": "api",
       "properties": {

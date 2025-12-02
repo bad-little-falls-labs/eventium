@@ -43,6 +43,11 @@ public interface ISimulationContext
     /// <summary>
     /// Schedules an event at an absolute time.
     /// </summary>
+    /// <param name="time">The absolute simulation time for the event.</param>
+    /// <param name="type">The event type identifier.</param>
+    /// <param name="payload">Optional dictionary payload for event data.</param>
+    /// <param name="priority">The priority for ordering events at the same time (default 0).</param>
+    /// <param name="handler">Optional handler override; uses registered handler if null.</param>
     void Schedule(
         double time,
         string type,
@@ -53,6 +58,12 @@ public interface ISimulationContext
     /// <summary>
     /// Schedules an event at an absolute time with a strongly-typed payload.
     /// </summary>
+    /// <typeparam name="TPayload">The payload type implementing <see cref="IEventPayload"/>.</typeparam>
+    /// <param name="time">The absolute simulation time for the event.</param>
+    /// <param name="type">The event type identifier.</param>
+    /// <param name="payload">The strongly-typed payload.</param>
+    /// <param name="priority">The priority for ordering events at the same time (default 0).</param>
+    /// <param name="handler">Optional handler override; uses registered handler if null.</param>
     void Schedule<TPayload>(
         double time,
         string type,
@@ -63,6 +74,11 @@ public interface ISimulationContext
     /// <summary>
     /// Schedules an event relative to the current time.
     /// </summary>
+    /// <param name="dt">The time delta from now when the event should occur.</param>
+    /// <param name="type">The event type identifier.</param>
+    /// <param name="payload">Optional dictionary payload for event data.</param>
+    /// <param name="priority">The priority for ordering events at the same time (default 0).</param>
+    /// <param name="handler">Optional handler override; uses registered handler if null.</param>
     void ScheduleIn(
         double dt,
         string type,
@@ -73,6 +89,12 @@ public interface ISimulationContext
     /// <summary>
     /// Schedules an event relative to the current time with a strongly-typed payload.
     /// </summary>
+    /// <typeparam name="TPayload">The payload type implementing <see cref="IEventPayload"/>.</typeparam>
+    /// <param name="dt">The time delta from now when the event should occur.</param>
+    /// <param name="type">The event type identifier.</param>
+    /// <param name="payload">The strongly-typed payload.</param>
+    /// <param name="priority">The priority for ordering events at the same time (default 0).</param>
+    /// <param name="handler">Optional handler override; uses registered handler if null.</param>
     void ScheduleIn<TPayload>(
         double dt,
         string type,

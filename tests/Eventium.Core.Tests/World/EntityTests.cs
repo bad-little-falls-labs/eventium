@@ -19,6 +19,19 @@ public class EntityTests
     }
 
     [Fact]
+    public void AddComponent_MultipleNamed_CanRetrieveIndividually()
+    {
+        var entity = new Entity(1, "TEST");
+        entity.AddComponent("a", new TestComponent { Value = 1 });
+        entity.AddComponent("b", new TestComponent { Value = 2 });
+
+        Assert.NotNull(entity.GetComponent<TestComponent>("a"));
+        Assert.NotNull(entity.GetComponent<TestComponent>("b"));
+        Assert.Equal(1, entity.GetComponent<TestComponent>("a")!.Value);
+        Assert.Equal(2, entity.GetComponent<TestComponent>("b")!.Value);
+    }
+
+    [Fact]
     public void AddComponent_SameName_OverwritesExisting()
     {
         var entity = new Entity(1, "TEST");
@@ -43,6 +56,19 @@ public class EntityTests
         Assert.NotNull(retrieved);
         Assert.Equal(100, retrieved.Value);
     }
+
+    [Fact]
+    public void AddComponent_WithEmptyName_Works()
+    {
+        var entity = new Entity(1, "TEST");
+        var component = new TestComponent { Value = 42 };
+
+        entity.AddComponent("", component);
+
+        var result = entity.GetComponent<TestComponent>("");
+        Assert.NotNull(result);
+        Assert.Equal(42, result.Value);
+    }
     [Fact]
     public void Constructor_SetsIdAndType()
     {
@@ -50,6 +76,19 @@ public class EntityTests
 
         Assert.Equal(42, entity.Id);
         Assert.Equal("PLAYER", entity.Type);
+    }
+
+    [Fact]
+    public void GetComponent_AfterOverwrite_ReturnsNewValue()
+    {
+        var entity = new Entity(1, "TEST");
+        entity.AddComponent("test", new TestComponent { Value = 1 });
+        entity.AddComponent("test", new TestComponent { Value = 99 });
+
+        var result = entity.GetComponent<TestComponent>("test");
+
+        Assert.NotNull(result);
+        Assert.Equal(99, result.Value);
     }
 
     [Fact]

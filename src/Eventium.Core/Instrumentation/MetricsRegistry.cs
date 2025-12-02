@@ -12,6 +12,11 @@ public sealed class MetricsRegistry
 {
     private readonly Dictionary<string, Counter> _counters = new();
 
+    /// <summary>
+    /// Gets or creates a counter with the specified name.
+    /// </summary>
+    /// <param name="name">The unique name of the counter.</param>
+    /// <returns>The counter instance. If it doesn't exist, creates a new one.</returns>
     public Counter Counter(string name)
     {
         if (!_counters.TryGetValue(name, out var counter))

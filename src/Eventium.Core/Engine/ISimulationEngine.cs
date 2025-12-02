@@ -20,11 +20,14 @@ public interface ISimulationEngine : ISimulationContext
     /// <summary>
     /// Registers a handler for a specific event type.
     /// </summary>
+    /// <param name="eventType">The event type identifier to handle.</param>
+    /// <param name="handler">The handler delegate to invoke for this event type.</param>
     void RegisterHandler(string eventType, EventHandlerDelegate handler);
 
     /// <summary>
     /// Registers a system to handle events.
     /// </summary>
+    /// <param name="system">The system to register for handling its declared event types.</param>
     void RegisterSystem(ISystem system);
 
     /// <summary>

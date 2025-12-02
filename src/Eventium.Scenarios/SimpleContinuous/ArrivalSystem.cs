@@ -11,12 +11,18 @@ namespace Eventium.Scenarios.SimpleContinuous;
 
 public sealed class ArrivalSystem : ISystem
 {
+    private double _lastArrivalTime = 0.0;
+
     public IEnumerable<string> HandledEventTypes => [ContinuousEventTypes.CustomerArrival];
 
     public void HandleEvent(ISimulationContext context, Event evt)
     {
         // Validate payload type (optional, for type safety)
         _ = evt.GetPayload<CustomerArrivalPayload>();
+
+        var arrivalsCounter = context.Metrics.GetCounter("customer.arrivals");
+        var interArrivalHistogram = context.Metrics.GetHistogram("customer.inter_arrival_time");
+        var activeCustomersGauge = context.Metrics.GetGauge("customer.active_count");
 
         var id = context.World.Entities.Count + 1;
 
@@ -27,6 +33,16 @@ public sealed class ArrivalSystem : ISystem
         });
 
         context.World.AddEntity(entity);
+
+        arrivalsCounter.Increment();
+        activeCustomersGauge.Increment();
+
+        if (_lastArrivalTime > 0)
+        {
+            var interArrivalTime = context.Time - _lastArrivalTime;
+            interArrivalHistogram.Observe(interArrivalTime);
+        }
+        _lastArrivalTime = context.Time;
 
         Console.WriteLine($"t={context.Time:0.0}s: Customer {id} arrived");
 

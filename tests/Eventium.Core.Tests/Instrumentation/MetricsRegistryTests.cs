@@ -71,4 +71,58 @@ public class MetricsRegistryTests
         Assert.Equal("test_counter", counter.Name);
         Assert.Equal(0L, counter.Value);
     }
+
+    [Fact]
+    public void GetGauge_ExistingGauge_ReturnsSameInstance()
+    {
+        var registry = new MetricsRegistry();
+        var gauge1 = registry.GetGauge("test");
+        gauge1.Set(99.0);
+        var gauge2 = registry.GetGauge("test");
+        Assert.Same(gauge1, gauge2);
+        Assert.Equal(99.0, gauge2.Value);
+    }
+
+    [Fact]
+    public void GetGauge_NewGauge_CreatesAndReturnsGauge()
+    {
+        var registry = new MetricsRegistry();
+        var gauge = registry.GetGauge("test_gauge", 10.0);
+        Assert.NotNull(gauge);
+        Assert.Equal("test_gauge", gauge.Name);
+        Assert.Equal(10.0, gauge.Value);
+    }
+
+    [Fact]
+    public void GetHistogram_ExistingHistogram_ReturnsSameInstance()
+    {
+        var registry = new MetricsRegistry();
+        var histogram1 = registry.GetHistogram("test");
+        histogram1.Observe(42.0);
+        var histogram2 = registry.GetHistogram("test");
+        Assert.Same(histogram1, histogram2);
+        Assert.Equal(1, histogram2.Count);
+    }
+
+    [Fact]
+    public void GetHistogram_NewHistogram_CreatesAndReturnsHistogram()
+    {
+        var registry = new MetricsRegistry();
+        var histogram = registry.GetHistogram("test_histogram");
+        Assert.NotNull(histogram);
+        Assert.Equal("test_histogram", histogram.Name);
+        Assert.Equal(0, histogram.Count);
+    }
+
+    [Fact]
+    public void Snapshots_ReturnReadOnlyCollections()
+    {
+        var registry = new MetricsRegistry();
+        registry.GetCounter("c1");
+        registry.GetHistogram("h1");
+        registry.GetGauge("g1");
+        Assert.Single(registry.Counters);
+        Assert.Single(registry.Histograms);
+        Assert.Single(registry.Gauges);
+    }
 }

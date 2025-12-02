@@ -121,12 +121,18 @@ public sealed class SimulationEngine : ISimulationEngine
     public SimulationResult Run(double? untilTime = null, int? maxEvents = null)
     {
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var eventsProcessedCounter = Metrics.GetCounter("sim.events_processed");
+        var queueSizeGauge = Metrics.GetGauge("sim.queue_size");
+        var simTimeGauge = Metrics.GetGauge("sim.time");
+
         _running = true;
         var processed = 0;
         var stopReason = SimulationStopReason.QueueEmpty;
 
         while (_running && Queue.Count > 0)
         {
+            queueSizeGauge.Set(Queue.Count);
+
             var evt = Queue.Dequeue();
             if (evt is null)
                 break;
@@ -138,9 +144,13 @@ public sealed class SimulationEngine : ISimulationEngine
             }
 
             Time = evt.Time;
+            simTimeGauge.Set(Time);
+
             evt.Handler(this, evt);
 
             processed++;
+            eventsProcessedCounter.Increment();
+
             if (maxEvents.HasValue && processed >= maxEvents.Value)
             {
                 stopReason = SimulationStopReason.MaxEventsReached;
@@ -149,6 +159,7 @@ public sealed class SimulationEngine : ISimulationEngine
         }
 
         stopwatch.Stop();
+        queueSizeGauge.Set(Queue.Count);
 
         if (!_running)
         {

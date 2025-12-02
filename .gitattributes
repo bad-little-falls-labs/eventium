@@ -1,0 +1,8 @@
+# Normalize most text files
+* text=auto
+
+# Ensure C# and solution files use LF
+*.cs    text eol=lf
+*.sln   text eol=lf
+*.props text eol=lf
+*.targets text eol=lf

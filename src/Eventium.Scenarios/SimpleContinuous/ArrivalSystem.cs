@@ -11,7 +11,7 @@ namespace Eventium.Scenarios.SimpleContinuous;
 
 public sealed class ArrivalSystem : ISystem
 {
-    private double _lastArrivalTime = 0.0;
+    private double _lastArrivalTime;
 
     public IEnumerable<string> HandledEventTypes => [ContinuousEventTypes.CustomerArrival];
 

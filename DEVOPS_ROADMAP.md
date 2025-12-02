@@ -86,26 +86,26 @@ Create helper scripts in `/scripts` or use a `Makefile`:
 name: CI
 
 on:
-    push:
-        branches: [main]
-    pull_request:
-        branches: [main]
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
-            - name: Setup .NET
-              uses: actions/setup-dotnet@v4
-              with:
-                  dotnet-version: "9.0.x"
-            - name: Restore
-              run: dotnet restore
-            - name: Build
-              run: dotnet build --no-restore
-            - name: Test
-              run: dotnet test --no-build --verbosity normal
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+      - name: Restore
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore
+      - name: Test
+        run: dotnet test --no-build --verbosity normal
 ```
 
 ### 2.2 Matrix Builds
@@ -114,9 +114,9 @@ Test across multiple platforms and .NET versions:
 
 ```yaml
 strategy:
-    matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        dotnet-version: ["8.0.x", "9.0.x"]
+  matrix:
+    os: [ubuntu-latest, windows-latest, macos-latest]
+    dotnet-version: ["8.0.x", "9.0.x"]
 ```
 
 ### 2.3 Caching
@@ -126,8 +126,8 @@ Speed up builds with dependency caching:
 ```yaml
 - uses: actions/cache@v4
   with:
-      path: ~/.nuget/packages
-      key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+    path: ~/.nuget/packages
+    key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
 ```
 
 ---
@@ -188,14 +188,14 @@ Speed up builds with dependency caching:
 ```yaml
 version: 2
 updates:
-    - package-ecosystem: "nuget"
-      directory: "/"
-      schedule:
-          interval: "weekly"
-    - package-ecosystem: "github-actions"
-      directory: "/"
-      schedule:
-          interval: "weekly"
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
 ```
 
 ### 3.4 PR Checks
@@ -231,23 +231,23 @@ Enforce quality on pull requests:
 name: Release
 
 on:
-    push:
-        tags:
-            - "v*"
+  push:
+    tags:
+      - "v*"
 
 jobs:
-    publish:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
-            - name: Setup .NET
-              uses: actions/setup-dotnet@v4
-              with:
-                  dotnet-version: "9.0.x"
-            - name: Pack
-              run: dotnet pack -c Release -o ./artifacts
-            - name: Publish to NuGet
-              run: dotnet nuget push ./artifacts/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+      - name: Pack
+        run: dotnet pack -c Release -o ./artifacts
+      - name: Publish to NuGet
+        run: dotnet nuget push ./artifacts/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
 ```
 
 ### 4.3 GitHub Releases
@@ -258,8 +258,8 @@ Automatically create releases with changelogs:
 - name: Create Release
   uses: softprops/action-gh-release@v1
   with:
-      files: ./artifacts/*.nupkg
-      generate_release_notes: true
+    files: ./artifacts/*.nupkg
+    generate_release_notes: true
 ```
 
 ### 4.4 Changelog Generation

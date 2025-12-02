@@ -6,15 +6,15 @@ Eventium is a modern, extensible event-driven simulation engine designed for mod
 
 ## Features
 
--   **Dual Time Models**: Discrete (turn-based) and Continuous (real-time) simulation modes
--   **Entity-Component System**: Flexible ECS-style architecture for modeling complex entities
--   **Typed Event Payloads**: Type-safe event data with compile-time checking
--   **Extensible Systems**: Plug-in architecture for custom simulation logic
--   **Built-in Instrumentation**: Event logging and metrics collection
+- **Dual Time Models**: Discrete (turn-based) and Continuous (real-time) simulation modes
+- **Entity-Component System**: Flexible ECS-style architecture for modeling complex entities
+- **Typed Event Payloads**: Type-safe event data with compile-time checking
+- **Extensible Systems**: Plug-in architecture for custom simulation logic
+- **Built-in Instrumentation**: Event logging and metrics collection
 
 ## Requirements
 
--   [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) or later
+- [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) or later
 
 ## Getting Started
 

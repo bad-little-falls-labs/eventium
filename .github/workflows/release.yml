@@ -16,6 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    environment:
+      name: nuget-production
+      url: https://www.nuget.org/packages/Eventium.Core
 
     steps:
       - name: Checkout
@@ -26,7 +29,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: "8.0.x"
+          dotnet-version: "9.0.x"
 
       - name: Restore dependencies
         run: dotnet restore

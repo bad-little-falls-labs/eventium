@@ -1,0 +1,26 @@
+{
+  "metadata": [
+    {
+      "src": [
+        { "files": ["src/Eventium.Core/**.csproj"], "exclude": ["**/bin/**", "**/obj/**"] }
+      ],
+      "dest": "api",
+      "properties": {
+        "TargetFramework": "net9.0"
+      }
+    }
+  ],
+  "build": {
+    "content": [
+      { "files": ["index.md", "articles/**.md", "api/**.yml", "toc.yml"] }
+    ],
+    "resource": [
+      { "files": ["images/**"] }
+    ],
+    "dest": "_site",
+    "globalMetadata": {
+      "_appTitle": "Eventium API Documentation"
+    },
+    "markdownEngineName": "markdig"
+  }
+}

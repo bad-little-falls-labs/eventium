@@ -1,6 +1,10 @@
 # Eventium
 
+[![CI](https://github.com/bad-little-falls-labs/eventium/actions/workflows/ci.yml/badge.svg)](https://github.com/bad-little-falls-labs/eventium/actions/workflows/ci.yml)
+[![Docs](https://github.com/bad-little-falls-labs/eventium/actions/workflows/docs.yml/badge.svg)](https://github.com/bad-little-falls-labs/eventium/actions/workflows/docs.yml)
+[![Benchmarks](https://github.com/bad-little-falls-labs/eventium/actions/workflows/benchmarks.yml/badge.svg)](https://github.com/bad-little-falls-labs/eventium/actions/workflows/benchmarks.yml)
 [![codecov](https://codecov.io/gh/bad-little-falls-labs/eventium/branch/main/graph/badge.svg)](https://codecov.io/gh/bad-little-falls-labs/eventium)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Eventium is a modern, extensible event-driven simulation engine designed for modeling real-world systems, processes, and scenarios. It supports both turn-based (discrete) and continuous-time (timed) simulations through a unified scheduling and event-processing architecture.
 
@@ -89,6 +93,12 @@ Code style is enforced via `.editorconfig`. The pre-commit hooks will automatica
 ```bash
 dotnet format
 ```
+
+### Additional Guides
+
+- Benchmarks: see `benchmarks/Eventium.Benchmarks/README.md` for manual execution, filters, and exporting results.
+- DevOps Roadmap: see `DEVOPS_ROADMAP.md` for CI/CD, coverage, and release workflows.
+- API Docs: published via GitHub Pages (once enabled) — see workflow status above.
 
 ## License
 

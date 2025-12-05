@@ -7,6 +7,25 @@ public class EventQueueTests
     private static readonly EventHandlerDelegate DummyHandler = (_, _) => { };
 
     [Fact]
+    public void Count_AfterMultipleEnqueueDequeue_RemainsAccurate()
+    {
+        var queue = new EventQueue();
+        queue.Enqueue(CreateEvent(1.0, "A"));
+        queue.Enqueue(CreateEvent(2.0, "B"));
+        Assert.Equal(2, queue.Count);
+
+        queue.Dequeue();
+        Assert.Equal(1, queue.Count);
+
+        queue.Enqueue(CreateEvent(3.0, "C"));
+        Assert.Equal(2, queue.Count);
+
+        queue.Dequeue();
+        queue.Dequeue();
+        Assert.Equal(0, queue.Count);
+    }
+
+    [Fact]
     public void Count_EmptyQueue_ReturnsZero()
     {
         var queue = new EventQueue();
@@ -72,6 +91,51 @@ public class EventQueueTests
     }
 
     [Fact]
+    public void Enqueue_LargeNumberOfEvents_MaintainsCorrectOrder()
+    {
+        var queue = new EventQueue();
+        var random = new System.Random(42);
+
+        // Add 1000 events with random times
+        var expectedOrder = new List<(double time, string type)>();
+        for (int i = 0; i < 1000; i++)
+        {
+            var time = random.NextDouble() * 100;
+            var type = $"EVENT_{i}";
+            expectedOrder.Add((time, type));
+            queue.Enqueue(CreateEvent(time, type));
+        }
+
+        // Sort expected order
+        expectedOrder.Sort((a, b) => a.time.CompareTo(b.time));
+
+        // Verify dequeue order matches
+        for (int i = 0; i < 1000; i++)
+        {
+            var evt = queue.Dequeue();
+            Assert.NotNull(evt);
+            Assert.Equal(expectedOrder[i].type, evt.Type);
+        }
+    }
+
+    [Fact]
+    public void Enqueue_MixedTimeAndPriority_OrdersCorrectly()
+    {
+        var queue = new EventQueue();
+        queue.Enqueue(CreateEvent(2.0, "TIME_2_PRI_5", priority: 5));
+        queue.Enqueue(CreateEvent(1.0, "TIME_1_PRI_0", priority: 0));
+        queue.Enqueue(CreateEvent(2.0, "TIME_2_PRI_1", priority: 1));
+        queue.Enqueue(CreateEvent(1.0, "TIME_1_PRI_10", priority: 10));
+        queue.Enqueue(CreateEvent(3.0, "TIME_3_PRI_0", priority: 0));
+
+        Assert.Equal("TIME_1_PRI_0", queue.Dequeue()!.Type);
+        Assert.Equal("TIME_1_PRI_10", queue.Dequeue()!.Type);
+        Assert.Equal("TIME_2_PRI_1", queue.Dequeue()!.Type);
+        Assert.Equal("TIME_2_PRI_5", queue.Dequeue()!.Type);
+        Assert.Equal("TIME_3_PRI_0", queue.Dequeue()!.Type);
+    }
+
+    [Fact]
     public void Enqueue_SingleEvent_IncrementsCount()
     {
         var queue = new EventQueue();
@@ -80,6 +144,57 @@ public class EventQueueTests
         queue.Enqueue(evt);
 
         Assert.Equal(1, queue.Count);
+    }
+
+    [Fact]
+    public void Enqueue_WithNegativePriorities_OrdersCorrectly()
+    {
+        var queue = new EventQueue();
+        var evt1 = CreateEvent(1.0, "LOW", priority: 5);
+        var evt2 = CreateEvent(1.0, "HIGH", priority: -10);
+        var evt3 = CreateEvent(1.0, "MED", priority: 0);
+
+        queue.Enqueue(evt1);
+        queue.Enqueue(evt2);
+        queue.Enqueue(evt3);
+
+        Assert.Equal("HIGH", queue.Dequeue()!.Type);
+        Assert.Equal("MED", queue.Dequeue()!.Type);
+        Assert.Equal("LOW", queue.Dequeue()!.Type);
+    }
+
+    [Fact]
+    public void Enqueue_WithNegativeTime_WorksCorrectly()
+    {
+        var queue = new EventQueue();
+        var evt1 = CreateEvent(-5.0, "NEGATIVE");
+        var evt2 = CreateEvent(0.0, "ZERO");
+        var evt3 = CreateEvent(5.0, "POSITIVE");
+
+        queue.Enqueue(evt1);
+        queue.Enqueue(evt2);
+        queue.Enqueue(evt3);
+
+        Assert.Equal("NEGATIVE", queue.Dequeue()!.Type);
+        Assert.Equal("ZERO", queue.Dequeue()!.Type);
+        Assert.Equal("POSITIVE", queue.Dequeue()!.Type);
+    }
+
+    [Fact]
+    public void Enqueue_WithZeroPriority_OrdersByTimeOnly()
+    {
+        var queue = new EventQueue();
+        var evt1 = CreateEvent(2.0, "SECOND", priority: 0);
+        var evt2 = CreateEvent(1.0, "FIRST", priority: 0);
+        var evt3 = CreateEvent(3.0, "THIRD", priority: 0);
+
+        queue.Enqueue(evt1);
+        queue.Enqueue(evt2);
+        queue.Enqueue(evt3);
+
+        Assert.Equal("FIRST", queue.Dequeue()!.Type);
+        Assert.Equal("SECOND", queue.Dequeue()!.Type);
+        Assert.Equal("THIRD", queue.Dequeue()!.Type);
     }
 
     [Fact]

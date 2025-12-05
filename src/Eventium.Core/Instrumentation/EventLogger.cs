@@ -13,6 +13,11 @@ namespace Eventium.Core.Instrumentation;
 /// </summary>
 public static class EventLogger
 {
+    /// <summary>
+    /// Logs an event to the console with timestamp and payload information.
+    /// </summary>
+    /// <param name="engine">The simulation engine (used to get current time).</param>
+    /// <param name="evt">The event to log.</param>
     public static void Log(SimulationEngine engine, Event evt)
     {
         Console.WriteLine($"[t={engine.Time:0.###}] {evt.Type} {FormatPayload(evt)}");

@@ -21,10 +21,13 @@ public interface IWorld
     /// <summary>
     /// Adds an entity to the world.
     /// </summary>
+    /// <param name="entity">The entity to add.</param>
     void AddEntity(Entity entity);
 
     /// <summary>
     /// Gets an entity by ID, or null if not found.
     /// </summary>
+    /// <param name="id">The unique entity ID.</param>
+    /// <returns>The entity if found, otherwise null.</returns>
     Entity? GetEntity(int id);
 }

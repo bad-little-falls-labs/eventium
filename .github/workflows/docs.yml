@@ -1,0 +1,64 @@
+name: Docs
+
+on:
+    push:
+        branches: [main]
+        paths:
+            - "src/**"
+            - "docs/**"
+    pull_request:
+        branches: [main]
+        paths:
+            - "src/**"
+            - "docs/**"
+
+jobs:
+    build-docs:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - name: Setup .NET
+              uses: actions/setup-dotnet@v4
+              with:
+                  dotnet-version: "9.0.x"
+            - name: Install DocFX
+              run: dotnet tool install -g docfx
+            - name: Add dotnet tools to PATH
+              shell: bash
+              run: echo "${HOME}/.dotnet/tools" >> $GITHUB_PATH
+            - name: Restore dependencies
+              run: dotnet restore
+            - name: Generate Metadata
+              working-directory: docs
+              run: docfx metadata --verbose
+            - name: Verify API files generated
+              run: ls -la docs/api/
+            - name: Build Site
+              working-directory: docs
+              run: docfx build --verbose
+            - name: Upload Site Artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: docfx-site
+                  path: docs/_site
+
+    deploy-pages:
+        needs: build-docs
+        runs-on: ubuntu-latest
+        permissions:
+            pages: write
+            id-token: write
+        steps:
+            - name: Download Site Artifact
+              uses: actions/download-artifact@v4
+              with:
+                  name: docfx-site
+                  path: docs/_site
+            - name: Setup Pages
+              uses: actions/configure-pages@v5
+            - name: Upload artifact
+              uses: actions/upload-pages-artifact@v3
+              with:
+                  path: docs/_site
+            - name: Deploy to GitHub Pages
+              uses: actions/deploy-pages@v4

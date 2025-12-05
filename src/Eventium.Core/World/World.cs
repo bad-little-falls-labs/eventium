@@ -13,18 +13,23 @@ public sealed class World : IWorld
     private readonly Dictionary<int, Entity> _entities = new();
     private readonly Dictionary<string, object?> _globals = new();
 
+    /// <summary>
+    /// Gets all entities in the world as a read-only dictionary.
+    /// </summary>
     public IReadOnlyDictionary<int, Entity> Entities => _entities;
 
     /// <summary>
-    /// Arbitrary global state for scenarios and systems.
+    /// Gets the global state dictionary for arbitrary scenario and system data.
     /// </summary>
     public IDictionary<string, object?> Globals => _globals;
 
+    /// <inheritdoc />
     public void AddEntity(Entity entity)
     {
         _entities[entity.Id] = entity;
     }
 
+    /// <inheritdoc />
     public Entity? GetEntity(int id)
     {
         return _entities.TryGetValue(id, out var entity) ? entity : null;

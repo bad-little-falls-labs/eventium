@@ -34,7 +34,15 @@ public enum SimulationStopReason
 /// </summary>
 public sealed class SimulationResult
 {
-
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SimulationResult"/> class.
+    /// </summary>
+    /// <param name="stopReason">The reason the simulation stopped.</param>
+    /// <param name="finalTime">The final simulation time.</param>
+    /// <param name="eventsProcessed">The total number of events processed.</param>
+    /// <param name="eventsRemaining">The number of events remaining in the queue.</param>
+    /// <param name="wallClockDuration">The wall-clock duration of the run.</param>
+    /// <param name="entityCount">The number of entities at the end of the run.</param>
     public SimulationResult(
         SimulationStopReason stopReason,
         double finalTime,
@@ -88,6 +96,10 @@ public sealed class SimulationResult
     /// </summary>
     public TimeSpan WallClockDuration { get; }
 
+    /// <summary>
+    /// Returns a string representation of this simulation result.
+    /// </summary>
+    /// <returns>A formatted string containing all result statistics.</returns>
     public override string ToString()
     {
         return $"SimulationResult {{ " +

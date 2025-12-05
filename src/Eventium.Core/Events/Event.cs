@@ -8,7 +8,14 @@ namespace Eventium.Core.Events;
 /// </summary>
 public sealed class Event : IComparable<Event>
 {
-
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Event"/> class with a dictionary payload.
+    /// </summary>
+    /// <param name="time">The simulation time when this event should occur.</param>
+    /// <param name="priority">The priority for ordering events at the same time (lower values execute first).</param>
+    /// <param name="type">The event type identifier.</param>
+    /// <param name="payload">Optional dictionary payload for event data.</param>
+    /// <param name="handler">The handler delegate to invoke when this event executes.</param>
     public Event(
         double time,
         int priority,
@@ -26,6 +33,14 @@ public sealed class Event : IComparable<Event>
         TypedPayload = null;
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Event"/> class with a strongly-typed payload.
+    /// </summary>
+    /// <param name="time">The simulation time when this event should occur.</param>
+    /// <param name="priority">The priority for ordering events at the same time (lower values execute first).</param>
+    /// <param name="type">The event type identifier.</param>
+    /// <param name="typedPayload">The strongly-typed payload implementing <see cref="IEventPayload"/>.</param>
+    /// <param name="handler">The handler delegate to invoke when this event executes.</param>
     public Event(
         double time,
         int priority,
@@ -40,10 +55,30 @@ public sealed class Event : IComparable<Event>
         TypedPayload = typedPayload ?? throw new ArgumentNullException(nameof(typedPayload));
         Handler = handler ?? throw new ArgumentNullException(nameof(handler));
     }
+
+    /// <summary>
+    /// Gets the handler delegate for this event.
+    /// </summary>
     public EventHandlerDelegate Handler { get; }
+
+    /// <summary>
+    /// Gets the dictionary payload (empty if using typed payload).
+    /// </summary>
     public IReadOnlyDictionary<string, object?> Payload { get; }
+
+    /// <summary>
+    /// Gets the priority for ordering events at the same time.
+    /// </summary>
     public int Priority { get; }
+
+    /// <summary>
+    /// Gets the simulation time when this event should occur.
+    /// </summary>
     public double Time { get; }
+
+    /// <summary>
+    /// Gets the event type identifier.
+    /// </summary>
     public string Type { get; }
 
     /// <summary>
@@ -52,6 +87,12 @@ public sealed class Event : IComparable<Event>
     /// </summary>
     public IEventPayload? TypedPayload { get; }
 
+    /// <summary>
+    /// Determines whether two events are equal.
+    /// </summary>
+    /// <param name="left">The left event to compare.</param>
+    /// <param name="right">The right event to compare.</param>
+    /// <returns>True if equal; otherwise false.</returns>
     public static bool operator ==(Event? left, Event? right)
     {
         if (left is null)
@@ -59,11 +100,23 @@ public sealed class Event : IComparable<Event>
         return left.Equals(right);
     }
 
+    /// <summary>
+    /// Determines whether two events are not equal.
+    /// </summary>
+    /// <param name="left">The left event to compare.</param>
+    /// <param name="right">The right event to compare.</param>
+    /// <returns>True if not equal; otherwise false.</returns>
     public static bool operator !=(Event? left, Event? right)
     {
         return !(left == right);
     }
 
+    /// <summary>
+    /// Determines whether the left event is ordered before the right event.
+    /// </summary>
+    /// <param name="left">The left event.</param>
+    /// <param name="right">The right event.</param>
+    /// <returns>True if left precedes right; otherwise false.</returns>
     public static bool operator <(Event? left, Event? right)
     {
         if (left is null)
@@ -71,6 +124,12 @@ public sealed class Event : IComparable<Event>
         return left.CompareTo(right) < 0;
     }
 
+    /// <summary>
+    /// Determines whether the left event is ordered before or equal to the right event.
+    /// </summary>
+    /// <param name="left">The left event.</param>
+    /// <param name="right">The right event.</param>
+    /// <returns>True if left precedes or equals right; otherwise false.</returns>
     public static bool operator <=(Event? left, Event? right)
     {
         if (left is null)
@@ -78,6 +137,12 @@ public sealed class Event : IComparable<Event>
         return left.CompareTo(right) <= 0;
     }
 
+    /// <summary>
+    /// Determines whether the left event is ordered after the right event.
+    /// </summary>
+    /// <param name="left">The left event.</param>
+    /// <param name="right">The right event.</param>
+    /// <returns>True if left follows right; otherwise false.</returns>
     public static bool operator >(Event? left, Event? right)
     {
         if (left is null)
@@ -85,6 +150,12 @@ public sealed class Event : IComparable<Event>
         return left.CompareTo(right) > 0;
     }
 
+    /// <summary>
+    /// Determines whether the left event is ordered after or equal to the right event.
+    /// </summary>
+    /// <param name="left">The left event.</param>
+    /// <param name="right">The right event.</param>
+    /// <returns>True if left follows or equals right; otherwise false.</returns>
     public static bool operator >=(Event? left, Event? right)
     {
         if (left is null)
@@ -92,6 +163,11 @@ public sealed class Event : IComparable<Event>
         return left.CompareTo(right) >= 0;
     }
 
+    /// <summary>
+    /// Compares this event to another for ordering by time, then priority.
+    /// </summary>
+    /// <param name="other">The event to compare to.</param>
+    /// <returns>Negative if this event comes before other, positive if after, zero if equal.</returns>
     public int CompareTo(Event? other)
     {
         if (other is null)
@@ -104,6 +180,11 @@ public sealed class Event : IComparable<Event>
         return Priority.CompareTo(other.Priority);
     }
 
+    /// <summary>
+    /// Determines whether the specified object is equal to this event.
+    /// </summary>
+    /// <param name="obj">The object to compare.</param>
+    /// <returns>True if the objects are equal; otherwise, false.</returns>
     public override bool Equals(object? obj)
     {
         if (obj is Event other)
@@ -113,6 +194,10 @@ public sealed class Event : IComparable<Event>
         return false;
     }
 
+    /// <summary>
+    /// Gets the hash code for this event.
+    /// </summary>
+    /// <returns>A hash code computed from time, priority, and type.</returns>
     public override int GetHashCode()
     {
         return HashCode.Combine(Time, Priority, Type);

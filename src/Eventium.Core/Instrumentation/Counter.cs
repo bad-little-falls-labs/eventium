@@ -10,14 +10,29 @@ namespace Eventium.Core.Instrumentation;
 /// </summary>
 public sealed class Counter
 {
-
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Counter"/> class.
+    /// </summary>
+    /// <param name="name">The name of the counter.</param>
     public Counter(string name)
     {
         Name = name;
     }
+
+    /// <summary>
+    /// Gets the name of this counter.
+    /// </summary>
     public string Name { get; }
+
+    /// <summary>
+    /// Gets the current value of the counter.
+    /// </summary>
     public long Value { get; private set; }
 
+    /// <summary>
+    /// Increments the counter by the specified amount.
+    /// </summary>
+    /// <param name="amount">The amount to increment by (default is 1).</param>
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Modifies instance state (Value)")]
     public void Increment(long amount = 1)
     {

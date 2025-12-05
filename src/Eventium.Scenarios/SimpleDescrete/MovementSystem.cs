@@ -17,11 +17,18 @@ public sealed class MovementSystem : ISystem
     {
         var payload = evt.GetPayload<MoveAgentPayload>();
 
+        var movesCounter = context.Metrics.GetCounter("agent.moves");
+        var distanceHistogram = context.Metrics.GetHistogram("agent.distance");
+
         var entity = context.World.GetEntity(payload.EntityId)!;
         var pos = entity.GetComponent<PositionComponent>(DiscreteComponentNames.Position)!;
 
         pos.X += payload.Dx;
         pos.Y += payload.Dy;
+
+        movesCounter.Increment();
+        var distance = Math.Sqrt((payload.Dx * payload.Dx) + (payload.Dy * payload.Dy));
+        distanceHistogram.Observe(distance);
 
         var turn = context.TimeModel.ToTurn(context.Time);
         Console.WriteLine($"Turn {turn}: Agent {payload.EntityId} moved to ({pos.X},{pos.Y})");

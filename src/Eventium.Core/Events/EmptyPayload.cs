@@ -8,6 +8,9 @@ namespace Eventium.Core.Events;
 /// </summary>
 public sealed record EmptyPayload : IEventPayload
 {
+    /// <summary>
+    /// Gets a reusable singleton instance of <see cref="EmptyPayload"/>.
+    /// </summary>
     public static readonly EmptyPayload Instance = new();
 
     private EmptyPayload() { }

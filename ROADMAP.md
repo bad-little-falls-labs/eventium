@@ -20,12 +20,12 @@
 
 ## Phase 1: Complete v0.1 Core (Near-term)
 
-| Task                          | Description                                                                                                                | Priority |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------- | -------- |
-| **1.1 Add Unit Tests**        | Create `Eventium.Core.Tests` project with xUnit tests for `SimulationEngine`, `EventQueue`, `TimeModel`, `World`, `Entity` | High     |
-| **1.2 Metrics Integration**   | Wire `MetricsRegistry` into `SimulationEngine`; add histogram & gauge types                                                | Medium   |
-| **1.3 Event Tracing/Logging** | Add optional event logging with correlation IDs for debugging                                                              | Medium   |
-| **1.4 XML Documentation**     | Add `<summary>` docs to all public APIs                                                                                    | Medium   |
+| Task                          | Description                                                                                                                | Priority | Status  |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------- | -------- | ------- |
+| **1.1 Add Unit Tests**        | Create `Eventium.Core.Tests` project with xUnit tests for `SimulationEngine`, `EventQueue`, `TimeModel`, `World`, `Entity` | High     | ✅ Done |
+| **1.2 Metrics Integration**   | Wire `MetricsRegistry` into `SimulationEngine`; add histogram & gauge types                                                | Medium   | ✅ Done |
+| **1.3 Event Tracing/Logging** | Add optional event logging with correlation IDs for debugging                                                              | Medium   |         |
+| **1.4 XML Documentation**     | Add `<summary>` docs to all public APIs                                                                                    | Medium   | ✅ Done |
 
 ---
 

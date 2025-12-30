@@ -71,6 +71,55 @@ public sealed class SimulationRunnerTests
     }
 
     [Fact]
+    public async Task RunRealTimeAsync_Pause_StopsTimeAdvancement()
+    {
+        // Use continuous time mode for this test
+        var continuousEngine = new SimulationEngine(
+            new TimeModel(TimeMode.Continuous),
+            new WorldClass(),
+            new EventQueue(),
+            new DefaultRandomSource(42));
+
+        continuousEngine.RegisterHandler(TestEvent, (_, __) => { });
+
+        // Schedule many events
+        for (int i = 1; i <= 1000; i++)
+        {
+            continuousEngine.Schedule(i * 0.01, TestEvent);
+        }
+
+        var runner = new SimulationRunner(continuousEngine);
+        var cts = new CancellationTokenSource();
+
+        // Start running
+        var task = runner.RunRealTimeAsync(frameDurationMs: 10, eventBudgetPerFrame: 100, cancellationToken: cts.Token);
+
+        // Let it run for a bit
+        await Task.Delay(100);
+
+        // Pause
+        runner.Pause();
+        await Task.Delay(50); // Give pause time to take effect
+        var timeAfterPause = continuousEngine.Time;
+        await Task.Delay(150); // Wait while paused
+        var timeAfterWait = continuousEngine.Time;
+
+        cts.Cancel();
+
+        try
+        {
+            await task;
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected
+        }
+
+        // Time should not have advanced while paused
+        Assert.Equal(timeAfterPause, timeAfterWait);
+    }
+
+    [Fact]
     public async Task RunRealTimeAsync_ProcessesEventsBudgeted()
     {
         var engine = CreateEngine();
@@ -148,7 +197,7 @@ public sealed class SimulationRunnerTests
         // With ~200ms real time at varying scales, we should have advanced simulation time
         // At minimum, some progression should occur
         // At 10x for 50ms = ~0.5s sim time
-        // At 1x for 50ms = ~0.05s sim time  
+        // At 1x for 50ms = ~0.05s sim time
         // At 0.5x for 100ms = ~0.05s sim time
         // Total expected: ~0.6s sim time (but could vary based on timing)
 

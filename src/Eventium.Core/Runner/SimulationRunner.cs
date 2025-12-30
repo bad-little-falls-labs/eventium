@@ -98,6 +98,11 @@ public sealed class SimulationRunner : ISimulationRunner
                         }
                     }
                 }
+                else
+                {
+                    // Keep lastWallTimeMs updated while paused to prevent time jumps on resume
+                    lastWallTimeMs = _realtimeStopwatch.Elapsed.TotalMilliseconds;
+                }
 
                 // Frame pacing: sleep until next frame
                 var frameElapsedMs = Stopwatch.GetElapsedTime(frameStart).TotalMilliseconds;

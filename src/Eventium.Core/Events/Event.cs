@@ -201,7 +201,7 @@ public sealed class Event : IComparable<Event>
     {
         if (obj is Event other)
         {
-            return Math.Abs(Time - other.Time) < double.Epsilon && Priority == other.Priority && Sequence == other.Sequence && Type == other.Type;
+            return Math.Abs(Time - other.Time) < 1e-9 && Priority == other.Priority && Sequence == other.Sequence && Type == other.Type;
         }
         return false;
     }

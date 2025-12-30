@@ -2,7 +2,7 @@ using Eventium.Core.World;
 
 namespace Eventium.Core.Tests.World;
 
-public class EntityTests
+public partial class EntityTests
 {
 
     [Fact]
@@ -112,12 +112,14 @@ public class EntityTests
         Assert.Null(result);
     }
 
-    private class OtherComponent : IComponent
+    [MemoryPack.MemoryPackable]
+    private sealed partial class OtherComponent : IComponent
     {
         public string Name { get; set; } = "";
     }
 
-    private class TestComponent : IComponent
+    [MemoryPack.MemoryPackable]
+    private sealed partial class TestComponent : IComponent
     {
         public int Value { get; set; }
     }

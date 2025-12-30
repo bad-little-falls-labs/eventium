@@ -8,4 +8,8 @@
     <DocumentationFile>bin/$(Configuration)/$(TargetFramework)/Eventium.Core.xml</DocumentationFile>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MemoryPack" Version="1.21.3" />
+  </ItemGroup>
+
 </Project>

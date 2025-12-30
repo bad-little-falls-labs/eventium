@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using Eventium.Core.Snapshots;
+using MemoryPack;
 
 // <copyright file="World.cs" company="bad-little-falls-labs">
 // Copyright © 2025 bad-little-falls-labs. All rights reserved.
@@ -14,11 +14,6 @@ namespace Eventium.Core.World;
 /// </summary>
 public sealed class World : IWorld
 {
-    private static readonly JsonSerializerOptions CloneOptions = new()
-    {
-        IncludeFields = true,
-        WriteIndented = false
-    };
     private readonly Dictionary<int, Entity> _entities = new();
     private readonly Dictionary<string, object?> _globals = new();
 
@@ -102,8 +97,8 @@ public sealed class World : IWorld
     {
         ArgumentNullException.ThrowIfNull(component);
         var type = component.GetType();
-        var json = JsonSerializer.Serialize(component, type, CloneOptions);
-        return (IComponent)JsonSerializer.Deserialize(json, type, CloneOptions)!;
+        var bytes = MemoryPackSerializer.Serialize(type, component);
+        return (IComponent)MemoryPackSerializer.Deserialize(type, bytes)!;
     }
 
     private static object? CloneObject(object? value)
@@ -114,7 +109,7 @@ public sealed class World : IWorld
         }
 
         var type = value.GetType();
-        var json = JsonSerializer.Serialize(value, type, CloneOptions);
-        return JsonSerializer.Deserialize(json, type, CloneOptions);
+        var bytes = MemoryPackSerializer.Serialize(type, value);
+        return MemoryPackSerializer.Deserialize(type, bytes);
     }
 }

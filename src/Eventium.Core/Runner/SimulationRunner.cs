@@ -135,7 +135,7 @@ public sealed class SimulationRunner : ISimulationRunner
                 Engine.RestoreSnapshot(snapshot!);
 
                 // If snapshot time matches target exactly, we're done
-                if (Math.Abs(snapshot!.Time - targetTime) < double.Epsilon)
+                if (Math.Abs(snapshot!.Time - targetTime) < 1e-9)
                 {
                     return new SimulationStepResult(
                         stopReason: SimulationStopReason.TimeReached,
@@ -155,7 +155,7 @@ public sealed class SimulationRunner : ISimulationRunner
         }
 
         // If target is current time, return without processing
-        if (Math.Abs(targetTime - Engine.Time) < double.Epsilon)
+        if (Math.Abs(targetTime - Engine.Time) < 1e-9)
         {
             return new SimulationStepResult(
                 stopReason: SimulationStopReason.TimeReached,

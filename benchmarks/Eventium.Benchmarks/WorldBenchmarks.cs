@@ -11,7 +11,7 @@ namespace Eventium.Benchmarks;
 [MaxColumn]
 [MeanColumn]
 [MedianColumn]
-public class WorldBenchmarks
+public partial class WorldBenchmarks
 {
     private List<Entity>? _entities;
     private World? _world;
@@ -42,6 +42,13 @@ public class WorldBenchmarks
         {
             world.AddEntity(entity);
         }
+    }
+
+    [Benchmark]
+    public void CaptureSnapshot()
+    {
+        // Benchmark snapshot capture with MemoryPack serialization
+        _ = _world!.CaptureSnapshot();
     }
 
     [Benchmark]
@@ -93,7 +100,8 @@ public class WorldBenchmarks
         }
     }
 
-    private class TestComponent : IComponent
+    [MemoryPack.MemoryPackable]
+    private sealed partial class TestComponent : IComponent
     {
         public int Value { get; set; }
     }

@@ -2,7 +2,7 @@ using Eventium.Core.World;
 
 namespace Eventium.Core.Tests.World;
 
-public class WorldTests
+public partial class WorldTests
 {
 
     [Fact]
@@ -158,7 +158,8 @@ public class WorldTests
         Assert.Null(result);
     }
 
-    private class TestComponent : IComponent
+    [MemoryPack.MemoryPackable]
+    private sealed partial class TestComponent : IComponent
     {
         public int Value { get; set; }
     }

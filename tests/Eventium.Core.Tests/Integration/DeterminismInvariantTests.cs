@@ -21,7 +21,7 @@ namespace Eventium.Core.Tests.Integration;
 /// <summary>
 /// End-to-end determinism and snapshot invariants.
 /// </summary>
-public sealed class DeterminismInvariantTests
+public sealed partial class DeterminismInvariantTests
 {
     private const string Tick = "TICK";
 
@@ -278,7 +278,8 @@ public sealed class DeterminismInvariantTests
         }
     }
 
-    private sealed class StateComponent : IComponent
+    [MemoryPack.MemoryPackable]
+    private sealed partial class StateComponent : IComponent
     {
 
         public string? Label { get; set; }

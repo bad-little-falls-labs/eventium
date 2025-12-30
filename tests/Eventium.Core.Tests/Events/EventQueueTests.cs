@@ -97,17 +97,26 @@ public class EventQueueTests
         var random = new System.Random(42);
 
         // Add 1000 events with random times
-        var expectedOrder = new List<(double time, string type)>();
+        var expectedOrder = new List<(double time, string type, int index)>();
         for (int i = 0; i < 1000; i++)
         {
             var time = random.NextDouble() * 100;
             var type = $"EVENT_{i}";
-            expectedOrder.Add((time, type));
+            expectedOrder.Add((time, type, i));
             queue.Enqueue(CreateEvent(time, type));
         }
 
         // Sort expected order
-        expectedOrder.Sort((a, b) => a.time.CompareTo(b.time));
+        expectedOrder.Sort((a, b) =>
+        {
+            var timeCmp = a.time.CompareTo(b.time);
+            if (timeCmp != 0)
+            {
+                return timeCmp;
+            }
+
+            return a.index.CompareTo(b.index); // tie-break by enqueue order
+        });
 
         // Verify dequeue order matches
         for (int i = 0; i < 1000; i++)
@@ -133,6 +142,23 @@ public class EventQueueTests
         Assert.Equal("TIME_2_PRI_1", queue.Dequeue()!.Type);
         Assert.Equal("TIME_2_PRI_5", queue.Dequeue()!.Type);
         Assert.Equal("TIME_3_PRI_0", queue.Dequeue()!.Type);
+    }
+
+    [Fact]
+    public void Enqueue_SameTimeAndPriority_UsesSequenceOrder()
+    {
+        var queue = new EventQueue();
+        var evt1 = CreateEvent(1.0, "FIRST", priority: 5);
+        var evt2 = CreateEvent(1.0, "SECOND", priority: 5);
+        var evt3 = CreateEvent(1.0, "THIRD", priority: 5);
+
+        queue.Enqueue(evt1);
+        queue.Enqueue(evt2);
+        queue.Enqueue(evt3);
+
+        Assert.Equal("FIRST", queue.Dequeue()!.Type);
+        Assert.Equal("SECOND", queue.Dequeue()!.Type);
+        Assert.Equal("THIRD", queue.Dequeue()!.Type);
     }
 
     [Fact]

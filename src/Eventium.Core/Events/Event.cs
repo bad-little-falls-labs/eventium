@@ -25,6 +25,7 @@ public sealed class Event : IComparable<Event>
     {
         Time = time;
         Priority = priority;
+        Sequence = 0;
         Type = type ?? throw new ArgumentNullException(nameof(type));
         Payload = payload is null
             ? new Dictionary<string, object?>()
@@ -50,6 +51,7 @@ public sealed class Event : IComparable<Event>
     {
         Time = time;
         Priority = priority;
+        Sequence = 0;
         Type = type ?? throw new ArgumentNullException(nameof(type));
         Payload = new Dictionary<string, object?>();
         TypedPayload = typedPayload ?? throw new ArgumentNullException(nameof(typedPayload));
@@ -70,6 +72,12 @@ public sealed class Event : IComparable<Event>
     /// Gets the priority for ordering events at the same time.
     /// </summary>
     public int Priority { get; }
+
+    /// <summary>
+    /// Gets the monotonic sequence number assigned at enqueue time for tie-breaking.
+    /// Lower sequence values execute first when time and priority are equal.
+    /// </summary>
+    public long Sequence { get; internal set; }
 
     /// <summary>
     /// Gets the simulation time when this event should occur.
@@ -177,7 +185,11 @@ public sealed class Event : IComparable<Event>
         if (timeCmp != 0)
             return timeCmp;
 
-        return Priority.CompareTo(other.Priority);
+        var priorityCmp = Priority.CompareTo(other.Priority);
+        if (priorityCmp != 0)
+            return priorityCmp;
+
+        return Sequence.CompareTo(other.Sequence);
     }
 
     /// <summary>
@@ -189,7 +201,7 @@ public sealed class Event : IComparable<Event>
     {
         if (obj is Event other)
         {
-            return Math.Abs(Time - other.Time) < double.Epsilon && Priority == other.Priority && Type == other.Type;
+            return Math.Abs(Time - other.Time) < double.Epsilon && Priority == other.Priority && Sequence == other.Sequence && Type == other.Type;
         }
         return false;
     }
@@ -200,7 +212,7 @@ public sealed class Event : IComparable<Event>
     /// <returns>A hash code computed from time, priority, and type.</returns>
     public override int GetHashCode()
     {
-        return HashCode.Combine(Time, Priority, Type);
+        return HashCode.Combine(Time, Priority, Sequence, Type);
     }
 
     /// <summary>

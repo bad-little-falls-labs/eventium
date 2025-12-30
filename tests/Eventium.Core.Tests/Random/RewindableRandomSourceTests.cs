@@ -11,6 +11,41 @@ namespace Eventium.Core.Tests.Random;
 /// </summary>
 public sealed class RewindableRandomSourceTests
 {
+
+    [Fact]
+    public void RewindableRandomSource_GetState_ReturnsStateObject()
+    {
+        var rng = new RewindableRandomSource(42);
+
+        // Advance RNG
+        _ = rng.NextDouble();
+        _ = rng.NextDouble();
+
+        var state = rng.GetState();
+
+        Assert.NotNull(state);
+    }
+
+    [Fact]
+    public void RewindableRandomSource_HandlesLargeRange()
+    {
+        var rng = new RewindableRandomSource(42);
+
+        for (int i = 0; i < 100; i++)
+        {
+            var value = rng.NextInt(0, 1000000);
+            Assert.True(value >= 0 && value < 1000000);
+        }
+    }
+
+    [Fact]
+    public void RewindableRandomSource_Implements_IRandomSourceWithState()
+    {
+        var rng = new RewindableRandomSource(42);
+
+        Assert.IsAssignableFrom<IRandomSourceWithState>(rng);
+        Assert.IsAssignableFrom<IRandomSource>(rng);
+    }
     [Fact]
     public void RewindableRandomSource_IsDeterministicWithSameSeed()
     {
@@ -24,21 +59,27 @@ public sealed class RewindableRandomSourceTests
     }
 
     [Fact]
-    public void RewindableRandomSource_ProducesDifferentSequencesWithDifferentSeeds()
+    public void RewindableRandomSource_MultipleCaptures_AllWork()
     {
-        var rng1 = new RewindableRandomSource(42);
-        var rng2 = new RewindableRandomSource(43);
+        var rng = new RewindableRandomSource(42);
 
-        var values1 = new List<double>();
-        var values2 = new List<double>();
+        var states = new List<object>();
 
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 5; i++)
         {
-            values1.Add(rng1.NextDouble());
-            values2.Add(rng2.NextDouble());
+            states.Add(rng.GetState());
+            _ = rng.NextDouble();
         }
 
-        Assert.NotEqual(values1, values2);
+        // Restore to each state and verify
+        for (int i = states.Count - 1; i >= 0; i--)
+        {
+            rng.SetState(states[i]);
+
+            // Should be able to get the next value
+            var nextValue = rng.NextDouble();
+            Assert.True(nextValue >= 0.0 && nextValue < 1.0);
+        }
     }
 
     [Fact]
@@ -75,17 +116,46 @@ public sealed class RewindableRandomSourceTests
     }
 
     [Fact]
-    public void RewindableRandomSource_GetState_ReturnsStateObject()
+    public void RewindableRandomSource_ProducesDifferentSequencesWithDifferentSeeds()
+    {
+        var rng1 = new RewindableRandomSource(42);
+        var rng2 = new RewindableRandomSource(43);
+
+        var values1 = new List<double>();
+        var values2 = new List<double>();
+
+        for (int i = 0; i < 10; i++)
+        {
+            values1.Add(rng1.NextDouble());
+            values2.Add(rng2.NextDouble());
+        }
+
+        Assert.NotEqual(values1, values2);
+    }
+
+    [Fact]
+    public void RewindableRandomSource_ProducesDiverseValues()
+    {
+        var rng = new RewindableRandomSource(42);
+        var values = new HashSet<double>();
+
+        for (int i = 0; i < 1000; i++)
+        {
+            values.Add(rng.NextDouble());
+        }
+
+        // Should have many unique values (not all duplicates or constant)
+        Assert.True(values.Count > 900);
+    }
+
+    [Fact]
+    public void RewindableRandomSource_SetState_RejectsInvalidState()
     {
         var rng = new RewindableRandomSource(42);
 
-        // Advance RNG
-        _ = rng.NextDouble();
-        _ = rng.NextDouble();
+        var ex = Assert.Throws<ArgumentException>(() => rng.SetState("invalid"));
 
-        var state = rng.GetState();
-
-        Assert.NotNull(state);
+        Assert.Contains("RngStateSnapshot", ex.Message);
     }
 
     [Fact]
@@ -127,75 +197,5 @@ public sealed class RewindableRandomSourceTests
 
         // Should produce the same sequence as the original
         Assert.Equal(value2, rng2.NextDouble());
-    }
-
-    [Fact]
-    public void RewindableRandomSource_SetState_RejectsInvalidState()
-    {
-        var rng = new RewindableRandomSource(42);
-
-        var ex = Assert.Throws<ArgumentException>(() => rng.SetState("invalid"));
-
-        Assert.Contains("RngStateSnapshot", ex.Message);
-    }
-
-    [Fact]
-    public void RewindableRandomSource_MultipleCaptures_AllWork()
-    {
-        var rng = new RewindableRandomSource(42);
-
-        var states = new List<object>();
-
-        for (int i = 0; i < 5; i++)
-        {
-            states.Add(rng.GetState());
-            _ = rng.NextDouble();
-        }
-
-        // Restore to each state and verify
-        for (int i = states.Count - 1; i >= 0; i--)
-        {
-            rng.SetState(states[i]);
-
-            // Should be able to get the next value
-            var nextValue = rng.NextDouble();
-            Assert.True(nextValue >= 0.0 && nextValue < 1.0);
-        }
-    }
-
-    [Fact]
-    public void RewindableRandomSource_Implements_IRandomSourceWithState()
-    {
-        var rng = new RewindableRandomSource(42);
-
-        Assert.IsAssignableFrom<IRandomSourceWithState>(rng);
-        Assert.IsAssignableFrom<IRandomSource>(rng);
-    }
-
-    [Fact]
-    public void RewindableRandomSource_ProducesDiverseValues()
-    {
-        var rng = new RewindableRandomSource(42);
-        var values = new HashSet<double>();
-
-        for (int i = 0; i < 1000; i++)
-        {
-            values.Add(rng.NextDouble());
-        }
-
-        // Should have many unique values (not all duplicates or constant)
-        Assert.True(values.Count > 900);
-    }
-
-    [Fact]
-    public void RewindableRandomSource_HandlesLargeRange()
-    {
-        var rng = new RewindableRandomSource(42);
-
-        for (int i = 0; i < 100; i++)
-        {
-            var value = rng.NextInt(0, 1000000);
-            Assert.True(value >= 0 && value < 1000000);
-        }
     }
 }

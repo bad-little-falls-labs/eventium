@@ -2,6 +2,7 @@
 //  Copyright © 2025 bad-little-falls-labs. All rights reserved.
 // </copyright>
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Eventium.Core.Events;
 
@@ -10,7 +11,8 @@ namespace Eventium.Core.Events;
 /// </summary>
 public sealed class EventQueue : IEventQueue
 {
-    private readonly PriorityQueue<Event, (double time, int priority)> _queue = new();
+    private readonly PriorityQueue<Event, (double time, int priority, long sequence)> _queue = new();
+    private long _sequenceCounter;
 
     /// <summary>
     /// Gets the number of events currently in the queue.
@@ -32,7 +34,8 @@ public sealed class EventQueue : IEventQueue
     /// <param name="evt">The event to add to the queue.</param>
     public void Enqueue(Event evt)
     {
-        _queue.Enqueue(evt, (evt.Time, evt.Priority));
+        evt.Sequence = Interlocked.Increment(ref _sequenceCounter);
+        _queue.Enqueue(evt, (evt.Time, evt.Priority, evt.Sequence));
     }
 
     /// <summary>

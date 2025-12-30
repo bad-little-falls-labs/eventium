@@ -12,8 +12,8 @@ namespace Eventium.Core.Random;
 public sealed class RewindableRandomSource : IRandomSourceWithState
 {
     private const ulong DefaultIncrement = 1442695040888963407UL;
-    private ulong _state;
     private readonly ulong _increment;
+    private ulong _state;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RewindableRandomSource"/> class.
@@ -22,7 +22,7 @@ public sealed class RewindableRandomSource : IRandomSourceWithState
     public RewindableRandomSource(int? seed = null)
     {
         _increment = DefaultIncrement;
-        
+
         // Initialize state from seed
         var initialSeed = seed ?? (int)System.DateTime.UtcNow.Ticks;
         _state = ((ulong)initialSeed ^ DefaultIncrement) * 6364136223846793005UL + DefaultIncrement;
@@ -38,6 +38,12 @@ public sealed class RewindableRandomSource : IRandomSourceWithState
         _increment = increment;
         var initialSeed = seed ?? (int)System.DateTime.UtcNow.Ticks;
         _state = ((ulong)initialSeed ^ increment) * 6364136223846793005UL + increment;
+    }
+
+    /// <inheritdoc />
+    public object GetState()
+    {
+        return new RngStateSnapshot(_state, _increment);
     }
 
     /// <inheritdoc />
@@ -58,12 +64,6 @@ public sealed class RewindableRandomSource : IRandomSourceWithState
         var range = (ulong)(maxExclusive - minInclusive);
         var sample = NextUInt() % range;
         return minInclusive + (int)sample;
-    }
-
-    /// <inheritdoc />
-    public object GetState()
-    {
-        return new RngStateSnapshot(_state, _increment);
     }
 
     /// <inheritdoc />
@@ -107,8 +107,8 @@ public sealed class RewindableRandomSource : IRandomSourceWithState
             State = state;
             Increment = increment;
         }
+        public ulong Increment { get; }
 
         public ulong State { get; }
-        public ulong Increment { get; }
     }
 }

@@ -2,7 +2,7 @@
 
 ## Current State Summary
 
-**What's Implemented (v0.1 Foundation):**
+**What's Implemented (Baseline 0.2):**
 
 - ✅ `SimulationEngine` with event loop, scheduling (`Schedule`/`ScheduleIn`)
 - ✅ `TimeModel` supporting Discrete and Continuous modes
@@ -15,6 +15,10 @@
 - ✅ `Scenario` class for scenario initialization
 - ✅ Working discrete demo (`MovementSystem`)
 - ✅ Working continuous demo (`ArrivalSystem`)
+- ✅ `SimulationRunner` with pause/resume/step/seek and real-time pacing
+- ✅ Snapshot/seek support (nearest snapshot restore + replay)
+- ✅ TimeScale-respecting real-time pacing; pause/resume without time jumps
+- ✅ MemoryPack-based snapshot cloning (fast, zero-allocation)
 
 ---
 
@@ -31,13 +35,13 @@
 
 ## Phase 2: Robustness & Usability (Short-term)
 
-| Task                              | Description                                                                      | Priority |
-| --------------------------------- | -------------------------------------------------------------------------------- | -------- |
-| **2.1 Snapshot/Serialization**    | Implement `ISnapshot` for World + Engine state; JSON serialization for save/load | High     |
-| **2.2 RNG State Capture**         | Include RNG state in snapshots for perfect reproducibility                       | High     |
-| **2.3 Scenario Configuration**    | Add YAML/JSON scenario loader (entities, parameters, initial events)             | Medium   |
-| **2.4 Validation**                | Scenario validation (missing entities, invalid references, constraint checks)    | Medium   |
-| **2.5 Statistical Distributions** | Add `IRandomSource` extensions: Exponential, Poisson, Normal distributions       | Medium   |
+| Task                              | Description                                                                           | Priority | Status  |
+| --------------------------------- | ------------------------------------------------------------------------------------- | -------- | ------- |
+| **2.1 Snapshot/Serialization**    | Snapshot cloning for World + Engine state (MemoryPack-based; persistence layer later) | High     | ✅ Done |
+| **2.2 RNG State Capture**         | Include RNG state in snapshots for perfect reproducibility                            | High     | ✅ Done |
+| **2.3 Scenario Configuration**    | Add YAML/JSON scenario loader (entities, parameters, initial events)                  | Medium   |         |
+| **2.4 Validation**                | Scenario validation (missing entities, invalid references, constraint checks)         | Medium   |         |
+| **2.5 Statistical Distributions** | Add `IRandomSource` extensions: Exponential, Poisson, Normal distributions            | Medium   |         |
 
 ---
 
@@ -77,17 +81,17 @@
 
 ## Phase 6: Packaging & DevOps
 
-| Task                    | Description                                        | Priority |
-| ----------------------- | -------------------------------------------------- | -------- |
-| **6.1 NuGet Package**   | Publish `Eventium.Core` to NuGet (or private feed) | Medium   |
-| **6.2 CI/CD Pipeline**  | GitHub Actions for build, test, publish            | High     |
-| **6.3 Benchmarks**      | Performance benchmarks for event throughput        | Low      |
-| **6.4 Sample Projects** | Complete example scenarios in separate repo/folder | Medium   |
+| Task                    | Description                                        | Priority | Status  |
+| ----------------------- | -------------------------------------------------- | -------- | ------- |
+| **6.1 NuGet Package**   | Publish `Eventium.Core` to NuGet (or private feed) | Medium   |         |
+| **6.2 CI/CD Pipeline**  | GitHub Actions for build, test, publish            | High     |         |
+| **6.3 Benchmarks**      | Performance benchmarks for event throughput        | Low      | ✅ Done |
+| **6.4 Sample Projects** | Complete example scenarios in separate repo/folder | Medium   |         |
 
 ---
 
 ## Recommended Next Steps (Immediate)
 
-1. **Add test project** - Create `tests/Eventium.Core.Tests` with basic coverage
-2. **Wire up metrics** - Add `Metrics` property usage in demos, demonstrate counter usage
-3. **Add GitHub Actions CI** - Automate build & test on push
+1. **Scenario configuration loader** - Implement YAML/JSON loader for entities/parameters/initial events (Phase 2.3)
+2. **CI/CD pipeline** - Add GitHub Actions for build, test, and formatting verification (Phase 6.2)
+3. **Scenario validation** - Add validation layer for configurations and demos (Phase 2.4)

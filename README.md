@@ -8,9 +8,13 @@
 
 Eventium is a modern, extensible event-driven simulation engine designed for modeling real-world systems, processes, and scenarios. It supports both turn-based (discrete) and continuous-time (timed) simulations through a unified scheduling and event-processing architecture.
 
+**Baseline (2025-12-30):** SimulationRunner with pause/resume/step/seek, real-time pacing, snapshot-based arbitrary-time seek, and MemoryPack-backed snapshot cloning.
+
 ## Features
 
 - **Dual Time Models**: Discrete (turn-based) and Continuous (real-time) simulation modes
+- **SimulationRunner**: Pause/resume/step/seek, real-time pacing honoring TimeScale changes
+- **Snapshot-based Seek**: Arbitrary-time seek via nearest snapshot restore + replay
 - **Entity-Component System**: Flexible ECS-style architecture for modeling complex entities
 - **Typed Event Payloads**: Type-safe event data with compile-time checking
 - **Extensible Systems**: Plug-in architecture for custom simulation logic

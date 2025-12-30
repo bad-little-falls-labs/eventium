@@ -30,6 +30,89 @@ public sealed class SimulationRunnerTests
     }
 
     [Fact]
+    public async Task PauseResume_DoesNotJumpTime()
+    {
+        // This test verifies that pausing and resuming doesn't cause time jumps:
+        // 1. Run real-time for a bit
+        // 2. Pause for a wall-clock delay
+        // 3. Resume
+        // 4. Assert sim time advances smoothly rather than jumping by paused duration
+        var continuousEngine = new SimulationEngine(
+            new TimeModel(TimeMode.Continuous),
+            new WorldClass(),
+            new EventQueue(),
+            new DefaultRandomSource(42));
+
+        continuousEngine.RegisterHandler(TestEvent, (_, __) => { });
+
+        // Schedule many events to keep simulation busy
+        for (int i = 1; i <= 1000; i++)
+        {
+            continuousEngine.Schedule(i * 0.01, TestEvent);
+        }
+
+        var runner = new SimulationRunner(continuousEngine);
+        var cts = new CancellationTokenSource();
+
+        // Start running
+        var task = runner.RunRealTimeAsync(frameDurationMs: 16, eventBudgetPerFrame: 50, cancellationToken: cts.Token);
+
+        // Let it run for a bit
+        await Task.Delay(100);
+
+        // Record time before pause
+        var timeBeforePause = continuousEngine.Time;
+
+        // Pause
+        runner.Pause();
+        await Task.Delay(50); // Short delay to ensure pause takes effect
+
+        // Record time during pause (should not advance significantly)
+        var timeDuringPause = continuousEngine.Time;
+
+        // Wait while paused (simulating user leaving it paused)
+        var pauseDuration = 200; // 200ms wall-clock pause
+        await Task.Delay(pauseDuration);
+
+        // Record time at end of pause (should still be roughly the same)
+        var timeAtEndOfPause = continuousEngine.Time;
+
+        // Time should not have advanced much during pause
+        var timeDuringPauseMs = (timeDuringPause - timeBeforePause) * 1000;
+        var timeAtEndOfPauseMs = (timeAtEndOfPause - timeBeforePause) * 1000;
+
+        Assert.True(timeDuringPauseMs < 100, $"Time advanced {timeDuringPauseMs}ms during pause setup");
+        Assert.True(timeAtEndOfPauseMs < 100, $"Time advanced {timeAtEndOfPauseMs}ms during {pauseDuration}ms pause");
+
+        // Resume
+        runner.Resume();
+        await Task.Delay(100);
+
+        // Record time after resume
+        var timeAfterResume = continuousEngine.Time;
+
+        // Cancel and cleanup
+        cts.Cancel();
+        try
+        {
+            await task;
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected
+        }
+
+        // The key assertion: time after resume should not include the paused duration
+        // Time should advance smoothly based on actual running time, not wall-clock time
+        var totalTimeAdvanced = timeAfterResume - timeBeforePause;
+        var totalTimeAdvancedMs = totalTimeAdvanced * 1000;
+
+        // Should be roughly 100ms (initial run) + 100ms (after resume) = ~200ms
+        // NOT 100ms + 200ms (pause) + 100ms = 400ms
+        Assert.True(totalTimeAdvancedMs < 350, $"Time jumped by {totalTimeAdvancedMs}ms, suggesting pause duration was included");
+    }
+
+    [Fact]
     public void Pause_SetsPausedState()
     {
         var runner = new SimulationRunner(CreateEngine());
@@ -207,6 +290,49 @@ public sealed class SimulationRunnerTests
         // The simulation should have advanced at least 0.1 seconds given 200ms of real time
         Assert.True(finalTime >= 0.1,
             $"TimeScale not taking effect: only advanced {finalTime:F3}s in 200ms real time");
+    }
+
+    [Fact]
+    public void Seek_BackwardToNonSnapshotTime_RestoresAndReplays()
+    {
+        // Deterministically seed snapshots via internal hook:
+        // 1) Capture snapshot at t=1.0
+        // 2) Advance to t=5.0
+        // 3) Seek to t=2.5 => should restore t=1.0 snapshot and replay to 2.5
+
+        var engine = new SimulationEngine(
+            new TimeModel(TimeMode.Continuous),
+            new WorldClass(),
+            new EventQueue(),
+            new DefaultRandomSource(42));
+
+        engine.RegisterHandler(TestEvent, (_, __) => { });
+
+        // Schedule events around the window of interest
+        engine.Schedule(0.5, TestEvent);
+        engine.Schedule(1.0, TestEvent);
+        engine.Schedule(2.0, TestEvent);
+        engine.Schedule(2.5, TestEvent);
+        engine.Schedule(3.5, TestEvent);
+        engine.Schedule(4.5, TestEvent);
+        engine.Schedule(5.0, TestEvent);
+
+        var runner = new SimulationRunner(engine, snapshotCapacity: 10);
+
+        // Process to 1.0 and capture snapshot, then inject into buffer
+        engine.ProcessUntil(1.0);
+        var snapshotAtOne = engine.CaptureSnapshot();
+        runner.AddSnapshotForTesting(snapshotAtOne);
+
+        // Advance further to consume more events
+        engine.ProcessUntil(5.0);
+        Assert.True(engine.Time >= 5.0);
+
+        // Seek backward to 2.5 (no exact snapshot). Should restore t=1.0 and replay forward.
+        var result = runner.Seek(2.5);
+
+        Assert.Equal(2.5, result.FinalTime);
+        Assert.Equal(2.5, engine.Time);
     }
 
     [Fact]
@@ -497,6 +623,74 @@ public sealed class SimulationRunnerTests
 
         // Runner should still be functional
         Assert.NotNull(runner.Engine);
+    }
+
+    [Fact]
+    public async Task TimeScale_AffectsRealTimePacing()
+    {
+        // This test verifies that TimeScale changes affect real-time pacing:
+        // 1. Run real-time with TimeScale=2.0
+        // 2. Assert sim time advances ~2x relative to wall time (within budget constraints)
+        var continuousEngine = new SimulationEngine(
+            new TimeModel(TimeMode.Continuous),
+            new WorldClass(),
+            new EventQueue(),
+            new DefaultRandomSource(42));
+
+        continuousEngine.RegisterHandler(TestEvent, (_, __) => { });
+
+        // Schedule many events to ensure we don't run out
+        for (int i = 1; i <= 10000; i++)
+        {
+            continuousEngine.Schedule(i * 0.001, TestEvent);
+        }
+
+        var runner = new SimulationRunner(continuousEngine);
+
+        // Set time scale to 2.0 (simulation runs 2x faster than real-time)
+        runner.SetTimeScale(2.0);
+
+        var cts = new CancellationTokenSource();
+
+        var timeAtStart = continuousEngine.Time;
+
+        // Start running
+        var task = runner.RunRealTimeAsync(frameDurationMs: 16, eventBudgetPerFrame: 100, cancellationToken: cts.Token);
+
+        // Let it run for a known wall-clock duration
+        var wallClockDurationMs = 200;
+        await Task.Delay(wallClockDurationMs);
+
+        var timeAfterDelay = continuousEngine.Time;
+
+        // Cancel
+        cts.Cancel();
+        try
+        {
+            await task;
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected
+        }
+
+        // Calculate how much sim time advanced
+        var simTimeAdvanced = timeAfterDelay - timeAtStart;
+        var simTimeAdvancedMs = simTimeAdvanced * 1000;
+
+        // With TimeScale=2.0, we expect sim time to advance roughly 2x wall-clock time
+        // Expected: ~400ms sim time for 200ms wall time
+        // Allow for some tolerance due to scheduling and event budget constraints
+        var expectedSimTimeMs = wallClockDurationMs * 2.0;
+        var toleranceMs = 100; // Allow 100ms tolerance
+
+        Assert.True(
+            simTimeAdvancedMs >= expectedSimTimeMs - toleranceMs,
+            $"Sim time {simTimeAdvancedMs}ms is too slow (expected ~{expectedSimTimeMs}ms for {wallClockDurationMs}ms wall time with TimeScale=2.0)");
+
+        Assert.True(
+            simTimeAdvancedMs <= expectedSimTimeMs + toleranceMs,
+            $"Sim time {simTimeAdvancedMs}ms is too fast (expected ~{expectedSimTimeMs}ms for {wallClockDurationMs}ms wall time with TimeScale=2.0)");
     }
 
     private static ISimulationEngine CreateEngine()

@@ -230,4 +230,13 @@ public sealed class SimulationRunner : ISimulationRunner
     {
         Engine.Stop();
     }
+
+    /// <summary>
+    /// Adds a snapshot to the buffer for testing. Internal for test injection only.
+    /// </summary>
+    /// <param name="snapshot">The snapshot to add.</param>
+    internal void AddSnapshotForTesting(ISimulationSnapshot snapshot)
+    {
+        _snapshotBuffer.Add(snapshot);
+    }
 }

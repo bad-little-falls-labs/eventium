@@ -68,7 +68,7 @@ public sealed class SimulationRunner : ISimulationRunner
         }
 
         _realtimeStopwatch = Stopwatch.StartNew();
-        var simStartTime = Engine.Time;
+        var lastWallTimeMs = 0.0;
 
         try
         {
@@ -78,10 +78,12 @@ public sealed class SimulationRunner : ISimulationRunner
 
                 if (!_paused)
                 {
-                    // Compute target simulation time based on wall elapsed and time scale
-                    var wallElapsedMs = _realtimeStopwatch.Elapsed.TotalMilliseconds;
-                    var simElapsedMs = wallElapsedMs * Clock.TimeScale;
-                    var targetSimTime = simStartTime + (simElapsedMs / 1000.0);
+                    // Compute target simulation time based on incremental wall elapsed and current time scale
+                    var currentWallTimeMs = _realtimeStopwatch.Elapsed.TotalMilliseconds;
+                    var wallDeltaMs = currentWallTimeMs - lastWallTimeMs;
+                    var simDeltaMs = wallDeltaMs * Clock.TimeScale;
+                    var targetSimTime = Engine.Time + (simDeltaMs / 1000.0);
+                    lastWallTimeMs = currentWallTimeMs;
 
                     // Process events up to target time with budget
                     var result = Engine.ProcessUntil(targetSimTime, eventBudgetPerFrame);

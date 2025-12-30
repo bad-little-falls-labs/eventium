@@ -18,6 +18,14 @@ public interface ISimulationEngine : ISimulationContext
     IEventQueue Queue { get; }
 
     /// <summary>
+    /// Processes events until a stopping condition is met.
+    /// </summary>
+    /// <param name="untilTime">Optional maximum simulation time. If specified, stops processing when the next event's time exceeds this value.</param>
+    /// <param name="maxEvents">Optional maximum number of events to process in this batch.</param>
+    /// <returns>A result containing statistics about this processing batch.</returns>
+    SimulationStepResult ProcessUntil(double? untilTime = null, int? maxEvents = null);
+
+    /// <summary>
     /// Registers a handler for a specific event type.
     /// </summary>
     /// <param name="eventType">The event type identifier to handle.</param>
@@ -31,10 +39,17 @@ public interface ISimulationEngine : ISimulationContext
     void RegisterSystem(ISystem system);
 
     /// <summary>
-    /// Runs the simulation until a condition is met.
+    /// Runs the simulation until a condition is met (convenience wrapper using <see cref="ProcessUntil"/>).
     /// </summary>
     /// <param name="untilTime">Optional maximum simulation time.</param>
     /// <param name="maxEvents">Optional maximum number of events to process.</param>
     /// <returns>A result containing statistics about the simulation run.</returns>
     SimulationResult Run(double? untilTime = null, int? maxEvents = null);
+
+    /// <summary>
+    /// Attempts to process the next event in the queue.
+    /// </summary>
+    /// <param name="processed">The event that was processed, or null if the queue was empty or simulation was stopped.</param>
+    /// <returns>True if an event was successfully processed; false if the queue is empty or simulation was stopped.</returns>
+    bool TryProcessNextEvent(out Event? processed);
 }

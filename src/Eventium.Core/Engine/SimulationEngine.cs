@@ -78,6 +78,69 @@ public sealed class SimulationEngine : ISimulationEngine
     public IWorld World { get; }
 
     /// <summary>
+    /// Processes events until a stopping condition is met.
+    /// </summary>
+    /// <param name="untilTime">Optional maximum simulation time. If specified, stops processing when an event's time exceeds this value (the event is lost).</param>
+    /// <param name="maxEvents">Optional maximum number of events to process in this batch.</param>
+    /// <returns>A result containing statistics about this processing batch.</returns>
+    public SimulationStepResult ProcessUntil(double? untilTime = null, int? maxEvents = null)
+    {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var queueSizeGauge = Metrics.GetGauge("sim.queue_size");
+
+        _running = true;
+        var processed = 0;
+        var stopReason = SimulationStopReason.QueueEmpty;
+
+        while (_running && Queue.Count > 0)
+        {
+            queueSizeGauge.Set(Queue.Count);
+
+            var evt = Queue.Dequeue();
+            if (evt is null)
+                break;
+
+            if (untilTime.HasValue && evt.Time > untilTime.Value)
+            {
+                stopReason = SimulationStopReason.TimeReached;
+                break;
+            }
+
+            Time = evt.Time;
+            var simTimeGauge = Metrics.GetGauge("sim.time");
+            simTimeGauge.Set(Time);
+
+            evt.Handler(this, evt);
+
+            var eventsProcessedCounter = Metrics.GetCounter("sim.events_processed");
+            eventsProcessedCounter.Increment();
+
+            processed++;
+
+            if (maxEvents.HasValue && processed >= maxEvents.Value)
+            {
+                stopReason = SimulationStopReason.MaxEventsReached;
+                break;
+            }
+        }
+
+        stopwatch.Stop();
+        queueSizeGauge.Set(Queue.Count);
+
+        if (!_running)
+        {
+            stopReason = SimulationStopReason.StoppedByUser;
+        }
+
+        return new SimulationStepResult(
+            stopReason: stopReason,
+            finalTime: Time,
+            eventsProcessed: processed,
+            eventsRemaining: Queue.Count,
+            wallClockDuration: stopwatch.Elapsed);
+    }
+
+    /// <summary>
     /// Registers a handler for a specific event type.
     /// </summary>
     /// <param name="eventType">The event type identifier to handle.</param>
@@ -113,64 +176,25 @@ public sealed class SimulationEngine : ISimulationEngine
     }
 
     /// <summary>
-    /// Runs the simulation until a condition is met.
+    /// Runs the simulation until a condition is met (convenience wrapper using <see cref="ProcessUntil"/>).
     /// </summary>
     /// <param name="untilTime">Optional maximum simulation time.</param>
     /// <param name="maxEvents">Optional maximum number of events to process.</param>
     /// <returns>A result containing statistics about the simulation run.</returns>
     public SimulationResult Run(double? untilTime = null, int? maxEvents = null)
     {
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        var eventsProcessedCounter = Metrics.GetCounter("sim.events_processed");
-        var queueSizeGauge = Metrics.GetGauge("sim.queue_size");
-        var simTimeGauge = Metrics.GetGauge("sim.time");
-
         _running = true;
-        var processed = 0;
-        var stopReason = SimulationStopReason.QueueEmpty;
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
-        while (_running && Queue.Count > 0)
-        {
-            queueSizeGauge.Set(Queue.Count);
-
-            var evt = Queue.Dequeue();
-            if (evt is null)
-                break;
-
-            if (untilTime.HasValue && evt.Time > untilTime.Value)
-            {
-                stopReason = SimulationStopReason.TimeReached;
-                break;
-            }
-
-            Time = evt.Time;
-            simTimeGauge.Set(Time);
-
-            evt.Handler(this, evt);
-
-            processed++;
-            eventsProcessedCounter.Increment();
-
-            if (maxEvents.HasValue && processed >= maxEvents.Value)
-            {
-                stopReason = SimulationStopReason.MaxEventsReached;
-                break;
-            }
-        }
+        var stepResult = ProcessUntil(untilTime, maxEvents);
 
         stopwatch.Stop();
-        queueSizeGauge.Set(Queue.Count);
-
-        if (!_running)
-        {
-            stopReason = SimulationStopReason.StoppedByUser;
-        }
 
         return new SimulationResult(
-            stopReason: stopReason,
-            finalTime: Time,
-            eventsProcessed: processed,
-            eventsRemaining: Queue.Count,
+            stopReason: stepResult.StopReason,
+            finalTime: stepResult.FinalTime,
+            eventsProcessed: stepResult.EventsProcessed,
+            eventsRemaining: stepResult.EventsRemaining,
             wallClockDuration: stopwatch.Elapsed,
             entityCount: World.Entities.Count);
     }
@@ -259,6 +283,35 @@ public sealed class SimulationEngine : ISimulationEngine
     public void Stop()
     {
         _running = false;
+    }
+
+    /// <summary>
+    /// Attempts to process the next event in the queue.
+    /// </summary>
+    /// <param name="processed">The event that was processed, or null if the queue was empty or simulation was stopped.</param>
+    /// <returns>True if an event was successfully processed; false if the queue is empty or simulation was stopped.</returns>
+    public bool TryProcessNextEvent(out Event? processed)
+    {
+        processed = null;
+
+        if (Queue.Count == 0)
+            return false;
+
+        var evt = Queue.Dequeue();
+        if (evt is null)
+            return false;
+
+        Time = evt.Time;
+        var simTimeGauge = Metrics.GetGauge("sim.time");
+        simTimeGauge.Set(Time);
+
+        evt.Handler(this, evt);
+
+        var eventsProcessedCounter = Metrics.GetCounter("sim.events_processed");
+        eventsProcessedCounter.Increment();
+
+        processed = evt;
+        return true;
     }
 
     // --- Internal dispatch ---

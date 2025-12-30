@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using Eventium.Core.Events;
 using Eventium.Core.Instrumentation;
 using Eventium.Core.Random;
+using Eventium.Core.Snapshots;
 using Eventium.Core.Systems;
 using Eventium.Core.Time;
 using Eventium.Core.World;
@@ -19,6 +20,7 @@ public sealed class SimulationEngine : ISimulationEngine
 {
     private readonly Dictionary<string, List<EventHandlerDelegate>> _handlers = new();
     private readonly List<ISystem> _systems = new();
+    private int _eventsProcessed;
     private bool _running;
 
     /// <summary>
@@ -46,6 +48,11 @@ public sealed class SimulationEngine : ISimulationEngine
         Queue = queue;
         Rng = rng;
     }
+
+    /// <summary>
+    /// Gets the total number of events processed across the lifetime of this engine instance.
+    /// </summary>
+    public int EventsProcessed => _eventsProcessed;
 
     /// <summary>
     /// Gets the metrics registry for instrumentation.
@@ -78,9 +85,25 @@ public sealed class SimulationEngine : ISimulationEngine
     public IWorld World { get; }
 
     /// <summary>
+    /// Captures a full simulation snapshot for deterministic replay.
+    /// </summary>
+    /// <returns>A snapshot of time, world, queue, RNG, and processed event count.</returns>
+    public ISimulationSnapshot CaptureSnapshot()
+    {
+        var queueSnapshot = Queue is IStatefulEventQueue statefulQueue
+            ? statefulQueue.CaptureSnapshot()
+            : new QueueSnapshot(Queue.Count, Queue.PeekTime());
+
+        var rngState = CaptureRngState();
+        var worldSnapshot = World.CaptureSnapshot();
+
+        return new SimulationSnapshot(Time, _eventsProcessed, worldSnapshot, queueSnapshot, rngState);
+    }
+
+    /// <summary>
     /// Processes events until a stopping condition is met.
     /// </summary>
-    /// <param name="untilTime">Optional maximum simulation time. If specified, stops processing when an event's time exceeds this value (the event is lost).</param>
+    /// <param name="untilTime">Optional maximum simulation time. Inclusive boundary: events with <c>evt.Time &lt;= untilTime</c> are processed; the first event with a larger time is left in the queue.</param>
     /// <param name="maxEvents">Optional maximum number of events to process in this batch.</param>
     /// <returns>A result containing statistics about this processing batch.</returns>
     public SimulationStepResult ProcessUntil(double? untilTime = null, int? maxEvents = null)
@@ -116,6 +139,7 @@ public sealed class SimulationEngine : ISimulationEngine
             eventsProcessedCounter.Increment();
 
             processed++;
+            _eventsProcessed++;
 
             if (maxEvents.HasValue && processed >= maxEvents.Value)
             {
@@ -172,6 +196,31 @@ public sealed class SimulationEngine : ISimulationEngine
             }
 
             list.Add(system.HandleEvent);
+        }
+    }
+
+    /// <summary>
+    /// Restores the simulation to a previously captured snapshot.
+    /// </summary>
+    /// <param name="snapshot">The snapshot to restore.</param>
+    public void RestoreSnapshot(ISimulationSnapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+
+        _running = false;
+        Time = snapshot.Time;
+        _eventsProcessed = snapshot.EventsProcessed;
+
+        World.RestoreSnapshot(snapshot.World);
+
+        if (Queue is IStatefulEventQueue statefulQueue)
+        {
+            statefulQueue.RestoreSnapshot(snapshot.Queue);
+        }
+
+        if (Rng is IRandomSourceWithState statefulRng && snapshot.Rng.State is not null)
+        {
+            statefulRng.SetState(snapshot.Rng.State);
         }
     }
 
@@ -311,7 +360,18 @@ public sealed class SimulationEngine : ISimulationEngine
         eventsProcessedCounter.Increment();
 
         processed = evt;
+        _eventsProcessed++;
         return true;
+    }
+
+    private RngState CaptureRngState()
+    {
+        if (Rng is IRandomSourceWithState stateful)
+        {
+            return new RngState(Time, _eventsProcessed, stateful.GetState(), stateful.GetType().FullName);
+        }
+
+        return new RngState(Time, _eventsProcessed);
     }
 
     // --- Internal dispatch ---

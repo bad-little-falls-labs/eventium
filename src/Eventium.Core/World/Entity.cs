@@ -24,6 +24,11 @@ public sealed class Entity
     }
 
     /// <summary>
+    /// Gets the components attached to this entity.
+    /// </summary>
+    public IReadOnlyDictionary<string, IComponent> Components => _components;
+
+    /// <summary>
     /// Gets the unique identifier for this entity.
     /// </summary>
     public int Id { get; }

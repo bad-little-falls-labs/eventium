@@ -2,6 +2,7 @@
 // Copyright © 2025 bad-little-falls-labs. All rights reserved.
 // </copyright>
 using Eventium.Core.Events;
+using Eventium.Core.Snapshots;
 using Eventium.Core.Systems;
 
 namespace Eventium.Core;
@@ -12,15 +13,26 @@ namespace Eventium.Core;
 /// </summary>
 public interface ISimulationEngine : ISimulationContext
 {
+
+    /// <summary>
+    /// Gets the total number of events processed.
+    /// </summary>
+    int EventsProcessed { get; }
     /// <summary>
     /// Gets the event queue.
     /// </summary>
     IEventQueue Queue { get; }
 
     /// <summary>
+    /// Captures a deterministic simulation snapshot.
+    /// </summary>
+    /// <returns>A snapshot containing world, queue, RNG, and counters.</returns>
+    ISimulationSnapshot CaptureSnapshot();
+
+    /// <summary>
     /// Processes events until a stopping condition is met.
     /// </summary>
-    /// <param name="untilTime">Optional maximum simulation time. If specified, stops processing when the next event's time exceeds this value.</param>
+    /// <param name="untilTime">Optional maximum simulation time. Events with <c>evt.Time &lt;= untilTime</c> are processed; the first event with <c>evt.Time</c> greater than <paramref name="untilTime"/> is left in the queue.</param>
     /// <param name="maxEvents">Optional maximum number of events to process in this batch.</param>
     /// <returns>A result containing statistics about this processing batch.</returns>
     SimulationStepResult ProcessUntil(double? untilTime = null, int? maxEvents = null);
@@ -37,6 +49,12 @@ public interface ISimulationEngine : ISimulationContext
     /// </summary>
     /// <param name="system">The system to register for handling its declared event types.</param>
     void RegisterSystem(ISystem system);
+
+    /// <summary>
+    /// Restores the simulation state from a snapshot.
+    /// </summary>
+    /// <param name="snapshot">The snapshot to restore.</param>
+    void RestoreSnapshot(ISimulationSnapshot snapshot);
 
     /// <summary>
     /// Runs the simulation until a condition is met (convenience wrapper using <see cref="ProcessUntil"/>).

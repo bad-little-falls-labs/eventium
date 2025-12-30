@@ -1,6 +1,8 @@
 // <copyright file="IWorld.cs" company="bad-little-falls-labs">
 // Copyright © 2025 bad-little-falls-labs. All rights reserved.
 // </copyright>
+using Eventium.Core.Snapshots;
+
 namespace Eventium.Core.World;
 
 /// <summary>
@@ -25,9 +27,21 @@ public interface IWorld
     void AddEntity(Entity entity);
 
     /// <summary>
+    /// Captures a deep snapshot of the world state.
+    /// </summary>
+    /// <returns>A world snapshot.</returns>
+    WorldSnapshot CaptureSnapshot();
+
+    /// <summary>
     /// Gets an entity by ID, or null if not found.
     /// </summary>
     /// <param name="id">The unique entity ID.</param>
     /// <returns>The entity if found, otherwise null.</returns>
     Entity? GetEntity(int id);
+
+    /// <summary>
+    /// Restores the world state from a snapshot.
+    /// </summary>
+    /// <param name="snapshot">The snapshot to restore.</param>
+    void RestoreSnapshot(WorldSnapshot snapshot);
 }

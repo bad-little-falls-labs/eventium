@@ -1,4 +1,8 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+using Eventium.Core.Snapshots;
 
 // <copyright file="World.cs" company="bad-little-falls-labs">
 // Copyright © 2025 bad-little-falls-labs. All rights reserved.
@@ -10,6 +14,11 @@ namespace Eventium.Core.World;
 /// </summary>
 public sealed class World : IWorld
 {
+    private static readonly JsonSerializerOptions CloneOptions = new()
+    {
+        IncludeFields = true,
+        WriteIndented = false
+    };
     private readonly Dictionary<int, Entity> _entities = new();
     private readonly Dictionary<string, object?> _globals = new();
 
@@ -30,8 +39,82 @@ public sealed class World : IWorld
     }
 
     /// <inheritdoc />
+    public WorldSnapshot CaptureSnapshot()
+    {
+        var entities = new List<WorldSnapshot.EntitySnapshot>(_entities.Count);
+
+        foreach (var entity in _entities.Values.OrderBy(e => e.Id))
+        {
+            var clonedComponents = new Dictionary<string, IComponent>(entity.Components.Count);
+            foreach (var component in entity.Components.OrderBy(comp => comp.Key))
+            {
+                clonedComponents[component.Key] = CloneComponent(component.Value);
+            }
+
+            entities.Add(new WorldSnapshot.EntitySnapshot(
+                entity.Id,
+                entity.Type,
+                clonedComponents.Count,
+                clonedComponents));
+        }
+
+        var globalsCopy = new Dictionary<string, object?>(_globals.Count);
+        foreach (var kvp in _globals.OrderBy(kvp => kvp.Key))
+        {
+            globalsCopy[kvp.Key] = CloneObject(kvp.Value);
+        }
+
+        return new WorldSnapshot(entities.Count, entities, globalsCopy);
+    }
+
+    /// <inheritdoc />
     public Entity? GetEntity(int id)
     {
         return _entities.TryGetValue(id, out var entity) ? entity : null;
+    }
+
+    /// <inheritdoc />
+    public void RestoreSnapshot(WorldSnapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+
+        _entities.Clear();
+        _globals.Clear();
+
+        foreach (var global in snapshot.Globals)
+        {
+            _globals[global.Key] = CloneObject(global.Value);
+        }
+
+        foreach (var entitySnapshot in snapshot.Entities)
+        {
+            var entity = new Entity(entitySnapshot.Id, entitySnapshot.Type);
+            foreach (var component in entitySnapshot.Components)
+            {
+                entity.AddComponent(component.Key, CloneComponent(component.Value));
+            }
+
+            _entities[entity.Id] = entity;
+        }
+    }
+
+    private static IComponent CloneComponent(IComponent component)
+    {
+        ArgumentNullException.ThrowIfNull(component);
+        var type = component.GetType();
+        var json = JsonSerializer.Serialize(component, type, CloneOptions);
+        return (IComponent)JsonSerializer.Deserialize(json, type, CloneOptions)!;
+    }
+
+    private static object? CloneObject(object? value)
+    {
+        if (value is null)
+        {
+            return null;
+        }
+
+        var type = value.GetType();
+        var json = JsonSerializer.Serialize(value, type, CloneOptions);
+        return JsonSerializer.Deserialize(json, type, CloneOptions);
     }
 }

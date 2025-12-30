@@ -1,0 +1,218 @@
+// <copyright file="SimulationRunner.cs" company="bad-little-falls-labs">
+// Copyright © 2025 bad-little-falls-labs. All rights reserved.
+// </copyright>
+using System.Diagnostics;
+using Eventium.Core.Snapshots;
+using Eventium.Core.Time;
+
+namespace Eventium.Core.Runner;
+
+/// <summary>
+/// Controls simulation execution with pause/resume, stepping, and real-time pacing.
+/// The runner only calls engine methods and never mutates the world directly.
+/// </summary>
+public sealed class SimulationRunner : ISimulationRunner
+{
+    private readonly SnapshotBuffer _snapshotBuffer;
+    private readonly SimulationClock _clock;
+    private bool _paused;
+    private Stopwatch? _realtimeStopwatch;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SimulationRunner"/> class.
+    /// </summary>
+    /// <param name="engine">The simulation engine to drive.</param>
+    /// <param name="snapshotCapacity">Maximum number of snapshots to retain for seeking (default 10).</param>
+    public SimulationRunner(ISimulationEngine engine, int snapshotCapacity = 10)
+    {
+        Engine = engine ?? throw new ArgumentNullException(nameof(engine));
+        _clock = new SimulationClock();
+        _snapshotBuffer = new SnapshotBuffer(snapshotCapacity);
+        _paused = false;
+    }
+
+    /// <inheritdoc />
+    public ISimulationEngine Engine { get; }
+
+    /// <inheritdoc />
+    public SimulationClock Clock => _clock;
+
+    /// <inheritdoc />
+    public bool IsPaused => _paused;
+
+    /// <inheritdoc />
+    public void Pause()
+    {
+        _clock.Pause();
+        _paused = true;
+    }
+
+    /// <inheritdoc />
+    public void Resume()
+    {
+        _clock.Resume();
+        _paused = false;
+    }
+
+    /// <inheritdoc />
+    public void Stop()
+    {
+        Engine.Stop();
+    }
+
+    /// <inheritdoc />
+    public SimulationStepResult StepEvent()
+    {
+        if (Engine.TryProcessNextEvent(out _))
+        {
+            return new SimulationStepResult(
+                stopReason: SimulationStopReason.MaxEventsReached,
+                finalTime: Engine.Time,
+                eventsProcessed: 1,
+                eventsRemaining: Engine.Queue.Count,
+                wallClockDuration: TimeSpan.Zero);
+        }
+
+        return new SimulationStepResult(
+            stopReason: SimulationStopReason.QueueEmpty,
+            finalTime: Engine.Time,
+            eventsProcessed: 0,
+            eventsRemaining: Engine.Queue.Count,
+            wallClockDuration: TimeSpan.Zero);
+    }
+
+    /// <inheritdoc />
+    public SimulationStepResult StepTurn()
+    {
+        if (Engine.TimeModel.Mode != TimeMode.Discrete)
+        {
+            throw new InvalidOperationException("StepTurn is only valid for discrete simulations.");
+        }
+
+        var nextBoundary = Engine.Time + Engine.TimeModel.Step;
+        return Engine.ProcessUntil(nextBoundary);
+    }
+
+    /// <inheritdoc />
+    public SimulationStepResult StepDelta(double dt)
+    {
+        if (dt < 0)
+        {
+            throw new ArgumentException("Time delta must be non-negative.", nameof(dt));
+        }
+
+        var targetTime = Engine.Time + dt;
+        return Engine.ProcessUntil(targetTime);
+    }
+
+    /// <inheritdoc />
+    public void SetTimeScale(double scale)
+    {
+        if (scale <= 0)
+        {
+            throw new ArgumentException("Time scale must be greater than 0.", nameof(scale));
+        }
+
+        Clock.TimeScale = scale;
+    }
+
+    /// <inheritdoc />
+    public SimulationStepResult Seek(double targetTime)
+    {
+        if (targetTime < 0)
+        {
+            throw new ArgumentException("Target time must be non-negative.", nameof(targetTime));
+        }
+
+        // If target is before current time, try to restore from snapshot
+        if (targetTime < Engine.Time)
+        {
+            if (_snapshotBuffer.TryGetByTime(targetTime, out var snapshot))
+            {
+                Engine.RestoreSnapshot(snapshot!);
+                return new SimulationStepResult(
+                    stopReason: SimulationStopReason.TimeReached,
+                    finalTime: Engine.Time,
+                    eventsProcessed: 0,
+                    eventsRemaining: Engine.Queue.Count,
+                    wallClockDuration: TimeSpan.Zero);
+            }
+
+            // No snapshot found; seek forward from now is not possible
+            throw new InvalidOperationException(
+                $"Cannot seek to {targetTime}: no snapshot available before that time. Current time is {Engine.Time}.");
+        }
+
+        // If target is current time, return without processing
+        if (Math.Abs(targetTime - Engine.Time) < double.Epsilon)
+        {
+            return new SimulationStepResult(
+                stopReason: SimulationStopReason.TimeReached,
+                finalTime: Engine.Time,
+                eventsProcessed: 0,
+                eventsRemaining: Engine.Queue.Count,
+                wallClockDuration: TimeSpan.Zero);
+        }
+
+        // Target is ahead; process until reaching it
+        return Engine.ProcessUntil(targetTime);
+    }
+
+    /// <inheritdoc />
+    public async Task RunRealTimeAsync(int frameDurationMs, int eventBudgetPerFrame = 1000, CancellationToken cancellationToken = default)
+    {
+        if (frameDurationMs <= 0)
+        {
+            throw new ArgumentException("Frame duration must be positive.", nameof(frameDurationMs));
+        }
+
+        if (eventBudgetPerFrame <= 0)
+        {
+            throw new ArgumentException("Event budget must be positive.", nameof(eventBudgetPerFrame));
+        }
+
+        _realtimeStopwatch = Stopwatch.StartNew();
+        var simStartTime = Engine.Time;
+
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested && Engine.Queue.Count > 0)
+            {
+                var frameStart = Stopwatch.GetTimestamp();
+
+                if (!_paused)
+                {
+                    // Compute target simulation time based on wall elapsed and time scale
+                    var wallElapsedMs = _realtimeStopwatch.Elapsed.TotalMilliseconds;
+                    var simElapsedMs = wallElapsedMs * Clock.TimeScale;
+                    var targetSimTime = simStartTime + (simElapsedMs / 1000.0);
+
+                    // Process events up to target time with budget
+                    var result = Engine.ProcessUntil(targetSimTime, eventBudgetPerFrame);
+
+                    // Update snapshot buffer periodically (every 10 events processed)
+                    if (result.EventsProcessed > 0 && Engine.EventsProcessed % 10 == 0)
+                    {
+                        if (Engine is ISimulationEngine simulationEngine)
+                        {
+                            var snapshot = simulationEngine.CaptureSnapshot();
+                            _snapshotBuffer.Add(snapshot);
+                        }
+                    }
+                }
+
+                // Frame pacing: sleep until next frame
+                var frameElapsedMs = Stopwatch.GetElapsedTime(frameStart).TotalMilliseconds;
+                var sleepMs = (int)(frameDurationMs - frameElapsedMs);
+                if (sleepMs > 0)
+                {
+                    await Task.Delay(sleepMs, cancellationToken);
+                }
+            }
+        }
+        finally
+        {
+            _realtimeStopwatch?.Stop();
+        }
+    }
+}

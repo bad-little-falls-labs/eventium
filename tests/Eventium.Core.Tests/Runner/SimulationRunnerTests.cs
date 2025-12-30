@@ -71,7 +71,7 @@ public sealed class SimulationRunnerTests
     }
 
     [Fact]
-    public void RunRealTimeAsync_ProcessesEventsBudgeted()
+    public async Task RunRealTimeAsync_ProcessesEventsBudgeted()
     {
         var engine = CreateEngine();
         engine.Schedule(0.0, TestEvent);
@@ -85,8 +85,18 @@ public sealed class SimulationRunnerTests
         var task = runner.RunRealTimeAsync(frameDurationMs: 10, eventBudgetPerFrame: 2, cancellationToken: cts.Token);
 
         // Give it time to process some events
-        System.Threading.Thread.Sleep(50);
+        await Task.Delay(50);
         cts.Cancel();
+
+        // Wait for the task to respond to cancellation
+        try
+        {
+            await task;
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected when cancellation is requested
+        }
 
         Assert.True(task.IsCompleted || task.IsCanceled);
     }

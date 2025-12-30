@@ -118,4 +118,29 @@ public sealed class SnapshotBuffer
 
         return false;
     }
+
+    /// <summary>
+    /// Attempts to retrieve the latest snapshot at or before the specified simulation time.
+    /// </summary>
+    /// <param name="time">The simulation time to search for.</param>
+    /// <param name="snapshot">The latest snapshot at or before the requested time, or null if none exists.</param>
+    /// <returns>True if a snapshot was found; false if no snapshots exist before the target time.</returns>
+    public bool TryGetLatestAtOrBefore(double time, out ISimulationSnapshot? snapshot)
+    {
+        snapshot = null;
+        double latestTime = double.NegativeInfinity;
+
+        // Scan all snapshots to find the latest one at or before target time
+        for (int i = 0; i < _buffer.Length; i++)
+        {
+            var current = _buffer[i];
+            if (current is not null && current.Time <= time && current.Time > latestTime)
+            {
+                latestTime = current.Time;
+                snapshot = current;
+            }
+        }
+
+        return snapshot is not null;
+    }
 }

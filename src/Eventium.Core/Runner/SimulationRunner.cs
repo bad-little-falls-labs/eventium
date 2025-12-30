@@ -120,23 +120,31 @@ public sealed class SimulationRunner : ISimulationRunner
             throw new ArgumentException("Target time must be non-negative.", nameof(targetTime));
         }
 
-        // If target is before current time, try to restore from snapshot
+        // If target is before current time, restore from latest snapshot at or before target, then replay forward
         if (targetTime < Engine.Time)
         {
-            if (_snapshotBuffer.TryGetByTime(targetTime, out var snapshot))
+            if (_snapshotBuffer.TryGetLatestAtOrBefore(targetTime, out var snapshot))
             {
                 Engine.RestoreSnapshot(snapshot!);
-                return new SimulationStepResult(
-                    stopReason: SimulationStopReason.TimeReached,
-                    finalTime: Engine.Time,
-                    eventsProcessed: 0,
-                    eventsRemaining: Engine.Queue.Count,
-                    wallClockDuration: TimeSpan.Zero);
+
+                // If snapshot time matches target exactly, we're done
+                if (Math.Abs(snapshot!.Time - targetTime) < double.Epsilon)
+                {
+                    return new SimulationStepResult(
+                        stopReason: SimulationStopReason.TimeReached,
+                        finalTime: Engine.Time,
+                        eventsProcessed: 0,
+                        eventsRemaining: Engine.Queue.Count,
+                        wallClockDuration: TimeSpan.Zero);
+                }
+
+                // Otherwise, replay forward from snapshot to target time
+                return Engine.ProcessUntil(targetTime);
             }
 
-            // No snapshot found; seek forward from now is not possible
+            // No snapshot found; cannot rewind
             throw new InvalidOperationException(
-                $"Cannot seek to {targetTime}: no snapshot available before that time. Current time is {Engine.Time}.");
+                $"Cannot seek to {targetTime}: no snapshot available at or before that time. Current time is {Engine.Time}.");
         }
 
         // If target is current time, return without processing

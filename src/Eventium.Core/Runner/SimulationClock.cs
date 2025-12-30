@@ -8,8 +8,13 @@ namespace Eventium.Core.Runner;
 /// </summary>
 public sealed class SimulationClock
 {
-    private double _timeScale = 1.0;
     private bool _isPaused;
+    private double _timeScale = 1.0;
+
+    /// <summary>
+    /// Gets a value indicating whether the clock is paused.
+    /// </summary>
+    public bool IsPaused => _isPaused;
 
     /// <summary>
     /// Gets or sets the time scale multiplier for real-time pacing.
@@ -26,11 +31,6 @@ public sealed class SimulationClock
             _timeScale = value;
         }
     }
-
-    /// <summary>
-    /// Gets a value indicating whether the clock is paused.
-    /// </summary>
-    public bool IsPaused => _isPaused;
 
     /// <summary>
     /// Pauses the clock.

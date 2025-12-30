@@ -13,8 +13,8 @@ namespace Eventium.Core.Runner;
 /// </summary>
 public sealed class SimulationRunner : ISimulationRunner
 {
-    private readonly SnapshotBuffer _snapshotBuffer;
     private readonly SimulationClock _clock;
+    private readonly SnapshotBuffer _snapshotBuffer;
     private bool _paused;
     private Stopwatch? _realtimeStopwatch;
 
@@ -32,10 +32,10 @@ public sealed class SimulationRunner : ISimulationRunner
     }
 
     /// <inheritdoc />
-    public ISimulationEngine Engine { get; }
+    public SimulationClock Clock => _clock;
 
     /// <inheritdoc />
-    public SimulationClock Clock => _clock;
+    public ISimulationEngine Engine { get; }
 
     /// <inheritdoc />
     public bool IsPaused => _paused;
@@ -52,110 +52,6 @@ public sealed class SimulationRunner : ISimulationRunner
     {
         _clock.Resume();
         _paused = false;
-    }
-
-    /// <inheritdoc />
-    public void Stop()
-    {
-        Engine.Stop();
-    }
-
-    /// <inheritdoc />
-    public SimulationStepResult StepEvent()
-    {
-        if (Engine.TryProcessNextEvent(out _))
-        {
-            return new SimulationStepResult(
-                stopReason: SimulationStopReason.MaxEventsReached,
-                finalTime: Engine.Time,
-                eventsProcessed: 1,
-                eventsRemaining: Engine.Queue.Count,
-                wallClockDuration: TimeSpan.Zero);
-        }
-
-        return new SimulationStepResult(
-            stopReason: SimulationStopReason.QueueEmpty,
-            finalTime: Engine.Time,
-            eventsProcessed: 0,
-            eventsRemaining: Engine.Queue.Count,
-            wallClockDuration: TimeSpan.Zero);
-    }
-
-    /// <inheritdoc />
-    public SimulationStepResult StepTurn()
-    {
-        if (Engine.TimeModel.Mode != TimeMode.Discrete)
-        {
-            throw new InvalidOperationException("StepTurn is only valid for discrete simulations.");
-        }
-
-        var nextBoundary = Engine.Time + Engine.TimeModel.Step;
-        return Engine.ProcessUntil(nextBoundary);
-    }
-
-    /// <inheritdoc />
-    public SimulationStepResult StepDelta(double dt)
-    {
-        if (dt < 0)
-        {
-            throw new ArgumentException("Time delta must be non-negative.", nameof(dt));
-        }
-
-        var targetTime = Engine.Time + dt;
-        return Engine.ProcessUntil(targetTime);
-    }
-
-    /// <inheritdoc />
-    public void SetTimeScale(double scale)
-    {
-        if (scale <= 0)
-        {
-            throw new ArgumentException("Time scale must be greater than 0.", nameof(scale));
-        }
-
-        Clock.TimeScale = scale;
-    }
-
-    /// <inheritdoc />
-    public SimulationStepResult Seek(double targetTime)
-    {
-        if (targetTime < 0)
-        {
-            throw new ArgumentException("Target time must be non-negative.", nameof(targetTime));
-        }
-
-        // If target is before current time, try to restore from snapshot
-        if (targetTime < Engine.Time)
-        {
-            if (_snapshotBuffer.TryGetByTime(targetTime, out var snapshot))
-            {
-                Engine.RestoreSnapshot(snapshot!);
-                return new SimulationStepResult(
-                    stopReason: SimulationStopReason.TimeReached,
-                    finalTime: Engine.Time,
-                    eventsProcessed: 0,
-                    eventsRemaining: Engine.Queue.Count,
-                    wallClockDuration: TimeSpan.Zero);
-            }
-
-            // No snapshot found; seek forward from now is not possible
-            throw new InvalidOperationException(
-                $"Cannot seek to {targetTime}: no snapshot available before that time. Current time is {Engine.Time}.");
-        }
-
-        // If target is current time, return without processing
-        if (Math.Abs(targetTime - Engine.Time) < double.Epsilon)
-        {
-            return new SimulationStepResult(
-                stopReason: SimulationStopReason.TimeReached,
-                finalTime: Engine.Time,
-                eventsProcessed: 0,
-                eventsRemaining: Engine.Queue.Count,
-                wallClockDuration: TimeSpan.Zero);
-        }
-
-        // Target is ahead; process until reaching it
-        return Engine.ProcessUntil(targetTime);
     }
 
     /// <inheritdoc />
@@ -214,5 +110,109 @@ public sealed class SimulationRunner : ISimulationRunner
         {
             _realtimeStopwatch?.Stop();
         }
+    }
+
+    /// <inheritdoc />
+    public SimulationStepResult Seek(double targetTime)
+    {
+        if (targetTime < 0)
+        {
+            throw new ArgumentException("Target time must be non-negative.", nameof(targetTime));
+        }
+
+        // If target is before current time, try to restore from snapshot
+        if (targetTime < Engine.Time)
+        {
+            if (_snapshotBuffer.TryGetByTime(targetTime, out var snapshot))
+            {
+                Engine.RestoreSnapshot(snapshot!);
+                return new SimulationStepResult(
+                    stopReason: SimulationStopReason.TimeReached,
+                    finalTime: Engine.Time,
+                    eventsProcessed: 0,
+                    eventsRemaining: Engine.Queue.Count,
+                    wallClockDuration: TimeSpan.Zero);
+            }
+
+            // No snapshot found; seek forward from now is not possible
+            throw new InvalidOperationException(
+                $"Cannot seek to {targetTime}: no snapshot available before that time. Current time is {Engine.Time}.");
+        }
+
+        // If target is current time, return without processing
+        if (Math.Abs(targetTime - Engine.Time) < double.Epsilon)
+        {
+            return new SimulationStepResult(
+                stopReason: SimulationStopReason.TimeReached,
+                finalTime: Engine.Time,
+                eventsProcessed: 0,
+                eventsRemaining: Engine.Queue.Count,
+                wallClockDuration: TimeSpan.Zero);
+        }
+
+        // Target is ahead; process until reaching it
+        return Engine.ProcessUntil(targetTime);
+    }
+
+    /// <inheritdoc />
+    public void SetTimeScale(double scale)
+    {
+        if (scale <= 0)
+        {
+            throw new ArgumentException("Time scale must be greater than 0.", nameof(scale));
+        }
+
+        Clock.TimeScale = scale;
+    }
+
+    /// <inheritdoc />
+    public SimulationStepResult StepDelta(double dt)
+    {
+        if (dt < 0)
+        {
+            throw new ArgumentException("Time delta must be non-negative.", nameof(dt));
+        }
+
+        var targetTime = Engine.Time + dt;
+        return Engine.ProcessUntil(targetTime);
+    }
+
+    /// <inheritdoc />
+    public SimulationStepResult StepEvent()
+    {
+        if (Engine.TryProcessNextEvent(out _))
+        {
+            return new SimulationStepResult(
+                stopReason: SimulationStopReason.MaxEventsReached,
+                finalTime: Engine.Time,
+                eventsProcessed: 1,
+                eventsRemaining: Engine.Queue.Count,
+                wallClockDuration: TimeSpan.Zero);
+        }
+
+        return new SimulationStepResult(
+            stopReason: SimulationStopReason.QueueEmpty,
+            finalTime: Engine.Time,
+            eventsProcessed: 0,
+            eventsRemaining: Engine.Queue.Count,
+            wallClockDuration: TimeSpan.Zero);
+    }
+
+    /// <inheritdoc />
+    public SimulationStepResult StepTurn()
+    {
+        if (Engine.TimeModel.Mode != TimeMode.Discrete)
+        {
+            throw new InvalidOperationException("StepTurn is only valid for discrete simulations.");
+        }
+
+        var nextBoundary = Engine.Time + Engine.TimeModel.Step;
+        return Engine.ProcessUntil(nextBoundary);
+    }
+
+    /// <inheritdoc />
+    public void Stop()
+    {
+        Engine.Stop();
     }
 }

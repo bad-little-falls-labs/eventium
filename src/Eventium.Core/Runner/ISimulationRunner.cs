@@ -9,15 +9,15 @@ namespace Eventium.Core.Runner;
 /// </summary>
 public interface ISimulationRunner
 {
-    /// <summary>
-    /// Gets the underlying simulation engine being driven.
-    /// </summary>
-    ISimulationEngine Engine { get; }
 
     /// <summary>
     /// Gets the simulation clock controlling pacing and stepping behavior.
     /// </summary>
     SimulationClock Clock { get; }
+    /// <summary>
+    /// Gets the underlying simulation engine being driven.
+    /// </summary>
+    ISimulationEngine Engine { get; }
 
     /// <summary>
     /// Gets a value indicating whether the runner is currently paused.
@@ -35,9 +35,37 @@ public interface ISimulationRunner
     void Resume();
 
     /// <summary>
-    /// Stops the simulation permanently.
+    /// Runs the simulation in real-time, advancing by <c>wallElapsed * timeScale</c> per frame.
+    /// Processes events in batches with an optional budget to prevent CPU runaway.
     /// </summary>
-    void Stop();
+    /// <param name="frameDurationMs">Target frame duration in milliseconds (e.g., 16 for ~60 FPS).</param>
+    /// <param name="eventBudgetPerFrame">Maximum events to process per frame (default 1000). Prevents runaway when many events occur at the same simulation time.</param>
+    /// <param name="cancellationToken">Token to stop the real-time loop.</param>
+    /// <returns>A task that completes when the simulation stops or cancellation is requested.</returns>
+    Task RunRealTimeAsync(int frameDurationMs, int eventBudgetPerFrame = 1000, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Seeks to a target simulation time via snapshot restore and replay.
+    /// If the target is before the current time and a snapshot exists, restores and replays.
+    /// If the target is ahead, processes events until reaching it.
+    /// </summary>
+    /// <param name="targetTime">The simulation time to seek to.</param>
+    /// <returns>The final step result from the seek operation.</returns>
+    SimulationStepResult Seek(double targetTime);
+
+    /// <summary>
+    /// Sets the time scale for real-time pacing (1.0 = normal, 2.0 = 2x speed, 0.5 = half speed).
+    /// </summary>
+    /// <param name="scale">The time scale multiplier. Must be greater than 0.</param>
+    void SetTimeScale(double scale);
+
+    /// <summary>
+    /// Advances the simulation by a time delta (primarily for continuous simulations).
+    /// Processes events up to and including <c>currentTime + dt</c>.
+    /// </summary>
+    /// <param name="dt">The time delta to advance.</param>
+    /// <returns>The step result.</returns>
+    SimulationStepResult StepDelta(double dt);
 
     /// <summary>
     /// Processes the next event in the queue and returns the result.
@@ -53,35 +81,7 @@ public interface ISimulationRunner
     SimulationStepResult StepTurn();
 
     /// <summary>
-    /// Advances the simulation by a time delta (primarily for continuous simulations).
-    /// Processes events up to and including <c>currentTime + dt</c>.
+    /// Stops the simulation permanently.
     /// </summary>
-    /// <param name="dt">The time delta to advance.</param>
-    /// <returns>The step result.</returns>
-    SimulationStepResult StepDelta(double dt);
-
-    /// <summary>
-    /// Sets the time scale for real-time pacing (1.0 = normal, 2.0 = 2x speed, 0.5 = half speed).
-    /// </summary>
-    /// <param name="scale">The time scale multiplier. Must be greater than 0.</param>
-    void SetTimeScale(double scale);
-
-    /// <summary>
-    /// Seeks to a target simulation time via snapshot restore and replay.
-    /// If the target is before the current time and a snapshot exists, restores and replays.
-    /// If the target is ahead, processes events until reaching it.
-    /// </summary>
-    /// <param name="targetTime">The simulation time to seek to.</param>
-    /// <returns>The final step result from the seek operation.</returns>
-    SimulationStepResult Seek(double targetTime);
-
-    /// <summary>
-    /// Runs the simulation in real-time, advancing by <c>wallElapsed * timeScale</c> per frame.
-    /// Processes events in batches with an optional budget to prevent CPU runaway.
-    /// </summary>
-    /// <param name="frameDurationMs">Target frame duration in milliseconds (e.g., 16 for ~60 FPS).</param>
-    /// <param name="eventBudgetPerFrame">Maximum events to process per frame (default 1000). Prevents runaway when many events occur at the same simulation time.</param>
-    /// <param name="cancellationToken">Token to stop the real-time loop.</param>
-    /// <returns>A task that completes when the simulation stops or cancellation is requested.</returns>
-    Task RunRealTimeAsync(int frameDurationMs, int eventBudgetPerFrame = 1000, CancellationToken cancellationToken = default);
+    void Stop();
 }

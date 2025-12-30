@@ -11,25 +11,6 @@ namespace Eventium.Core.Tests.Time;
 /// </summary>
 public sealed class SimulationClockTests
 {
-    [Fact]
-    public void SimulationClock_InitializesWithDefaults()
-    {
-        var clock = new SimulationClock(TimeMode.Continuous);
-
-        Assert.Equal(TimeMode.Continuous, clock.Mode);
-        Assert.Equal(StepPolicy.Event, clock.StepPolicy);
-        Assert.Equal(1.0, clock.TimeScale);
-        Assert.False(clock.IsPaused);
-    }
-
-    [Fact]
-    public void SimulationClock_InitializesWithCustomPolicy()
-    {
-        var clock = new SimulationClock(TimeMode.Discrete, StepPolicy.Tick);
-
-        Assert.Equal(TimeMode.Discrete, clock.Mode);
-        Assert.Equal(StepPolicy.Tick, clock.StepPolicy);
-    }
 
     [Fact]
     public void IsPaused_CanBeToggled()
@@ -43,6 +24,57 @@ public sealed class SimulationClockTests
 
         clock.IsPaused = false;
         Assert.False(clock.IsPaused);
+    }
+
+    [Fact]
+    public void SimulationClock_InitializesWithCustomPolicy()
+    {
+        var clock = new SimulationClock(TimeMode.Discrete, StepPolicy.Tick);
+
+        Assert.Equal(TimeMode.Discrete, clock.Mode);
+        Assert.Equal(StepPolicy.Tick, clock.StepPolicy);
+    }
+    [Fact]
+    public void SimulationClock_InitializesWithDefaults()
+    {
+        var clock = new SimulationClock(TimeMode.Continuous);
+
+        Assert.Equal(TimeMode.Continuous, clock.Mode);
+        Assert.Equal(StepPolicy.Event, clock.StepPolicy);
+        Assert.Equal(1.0, clock.TimeScale);
+        Assert.False(clock.IsPaused);
+    }
+
+    [Theory]
+    [InlineData(TimeMode.Discrete, StepPolicy.Event, 1.0, false)]
+    [InlineData(TimeMode.Continuous, StepPolicy.Tick, 2.0, true)]
+    [InlineData(TimeMode.Discrete, StepPolicy.Turn, 0.5, false)]
+    public void SimulationClock_SupportsAllConfigurations(TimeMode mode, StepPolicy policy, double scale, bool paused)
+    {
+        var clock = new SimulationClock(mode, policy)
+        {
+            TimeScale = scale,
+            IsPaused = paused
+        };
+
+        Assert.Equal(mode, clock.Mode);
+        Assert.Equal(policy, clock.StepPolicy);
+        Assert.Equal(scale, clock.TimeScale);
+        Assert.Equal(paused, clock.IsPaused);
+    }
+
+    [Fact]
+    public void StepPolicy_CanBeChanged()
+    {
+        var clock = new SimulationClock(TimeMode.Continuous, StepPolicy.Event);
+
+        Assert.Equal(StepPolicy.Event, clock.StepPolicy);
+
+        clock.StepPolicy = StepPolicy.Tick;
+        Assert.Equal(StepPolicy.Tick, clock.StepPolicy);
+
+        clock.StepPolicy = StepPolicy.Turn;
+        Assert.Equal(StepPolicy.Turn, clock.StepPolicy);
     }
 
     [Fact]
@@ -67,38 +99,6 @@ public sealed class SimulationClockTests
 
         var ex2 = Assert.Throws<ArgumentException>(() => clock.TimeScale = -1.0);
         Assert.Contains("greater than 0", ex2.Message);
-    }
-
-    [Fact]
-    public void StepPolicy_CanBeChanged()
-    {
-        var clock = new SimulationClock(TimeMode.Continuous, StepPolicy.Event);
-
-        Assert.Equal(StepPolicy.Event, clock.StepPolicy);
-
-        clock.StepPolicy = StepPolicy.Tick;
-        Assert.Equal(StepPolicy.Tick, clock.StepPolicy);
-
-        clock.StepPolicy = StepPolicy.Turn;
-        Assert.Equal(StepPolicy.Turn, clock.StepPolicy);
-    }
-
-    [Theory]
-    [InlineData(TimeMode.Discrete, StepPolicy.Event, 1.0, false)]
-    [InlineData(TimeMode.Continuous, StepPolicy.Tick, 2.0, true)]
-    [InlineData(TimeMode.Discrete, StepPolicy.Turn, 0.5, false)]
-    public void SimulationClock_SupportsAllConfigurations(TimeMode mode, StepPolicy policy, double scale, bool paused)
-    {
-        var clock = new SimulationClock(mode, policy)
-        {
-            TimeScale = scale,
-            IsPaused = paused
-        };
-
-        Assert.Equal(mode, clock.Mode);
-        Assert.Equal(policy, clock.StepPolicy);
-        Assert.Equal(scale, clock.TimeScale);
-        Assert.Equal(paused, clock.IsPaused);
     }
 
     [Fact]

@@ -24,14 +24,19 @@ public sealed class SimulationClock
     }
 
     /// <summary>
+    /// Gets or sets a value indicating whether the simulation is paused.
+    /// </summary>
+    public bool IsPaused { get; set; }
+
+    /// <summary>
     /// Gets the time mode (Discrete or Continuous) for this simulation.
     /// </summary>
     public TimeMode Mode { get; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether the simulation is paused.
+    /// Gets or sets the stepping policy (how the simulation advances).
     /// </summary>
-    public bool IsPaused { get; set; }
+    public StepPolicy StepPolicy { get; set; }
 
     /// <summary>
     /// Gets or sets the time scale multiplier for simulation speed.
@@ -52,11 +57,6 @@ public sealed class SimulationClock
             _timeScale = value;
         }
     }
-
-    /// <summary>
-    /// Gets or sets the stepping policy (how the simulation advances).
-    /// </summary>
-    public StepPolicy StepPolicy { get; set; }
 
     /// <summary>
     /// Returns a string representation of this clock's configuration.

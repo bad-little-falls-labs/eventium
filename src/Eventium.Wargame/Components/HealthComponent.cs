@@ -2,19 +2,21 @@
 // Copyright © 2025 bad-little-falls-labs. All rights reserved.
 // </copyright>
 
+using Eventium.Core.World;
+
 namespace Eventium.Wargame.Components;
 
 /// <summary>
 /// Represents the health and damage state of a unit.
 /// </summary>
-public sealed class HealthComponent
+public sealed class HealthComponent : IComponent
 {
-    /// <summary>Gets or sets the maximum health.</summary>
-    public int MaxHealth { get; set; }
-
-    /// <summary>Gets or sets the current health.</summary>
-    public int CurrentHealth { get; set; }
 
     /// <summary>Gets or sets the armor value (damage reduction).</summary>
     public int Armor { get; set; }
+
+    /// <summary>Gets or sets the current health.</summary>
+    public int CurrentHealth { get; set; }
+    /// <summary>Gets or sets the maximum health.</summary>
+    public int MaxHealth { get; set; }
 }

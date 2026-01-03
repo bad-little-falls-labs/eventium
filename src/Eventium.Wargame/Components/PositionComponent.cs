@@ -2,12 +2,14 @@
 // Copyright © 2025 bad-little-falls-labs. All rights reserved.
 // </copyright>
 
+using Eventium.Core.World;
+
 namespace Eventium.Wargame.Components;
 
 /// <summary>
 /// Represents the position of a unit on the battlefield grid.
 /// </summary>
-public sealed class PositionComponent
+public sealed class PositionComponent : IComponent
 {
     /// <summary>Gets or sets the X coordinate.</summary>
     public int X { get; set; }
